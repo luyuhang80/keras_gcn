@@ -58,6 +58,7 @@ model.compile(loss=mAP.my_loss, optimizer='adam', metrics=[mAP.auc])
 # filepath = 'model_{epoch:02d}_{val_auc:.2f}.HDF5'
 # checkpoint = ModelCheckpoint(os.path.join(save_dir,filepath),verbose=1,save_weights_only='True',period=1)
 model.summary()
+max_ = (0,'None')
 for file in os.listdir(save_dir):
 	if os.path.splitext(file)[1] == '.HDF5':
 		filename = '\r{}: '.format(file)
@@ -73,8 +74,10 @@ for file in os.listdir(save_dir):
 		t_m = mAP.mAP(des_c_x0,des_x_x1,c_y0,x_y1,model,100,'Text')
 		i_m = mAP.mAP(des_c_x1,des_x_x0,c_y1,x_y0,model,100,'Image')
 		string = filename + 'Avg:{:.2f}, Txt:{:.2f}, Img:{:.2f}.'.format((t_m+i_m)/2,t_m,i_m)
+		if (t_m+i_m)/2 > max_[0]:
+			max_ = ((t_m+i_m)/2,filename)
 		print(string)
-
+print('The best model is:{}, avg map :{:.2f}'.format(max_[1],max_[0]))
 
 
 
