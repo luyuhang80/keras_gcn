@@ -4,7 +4,6 @@ from lib import gcn_utils,graph,gcn,mAP
 import numpy as np
 import os,time,datetime
 import tensorflow as tf
-import tensorflow_hub as hub
 from keras import backend as K
 import keras
 import keras.layers as layers
