@@ -66,12 +66,12 @@ for file in os.listdir(save_dir):
 		model.load_weights(os.path.join(save_dir,file))
 		string += 'Descriptors building ... '
 		print(string,end ='',flush=True)
-		x_x0,x_x1 = mAP.get_desc(x_x0,x_x1,model)
-		c_x0,c_x1 = mAP.get_desc(c_x0,c_x1,model)
+		des_x_x0,des_x_x1 = mAP.get_desc(x_x0,x_x1,model)
+		des_c_x0,des_c_x1 = mAP.get_desc(c_x0,c_x1,model)
 		string += 'got .'
 		print(string,end='',flush=True)
-		t_m = mAP.mAP(c_x0,x_x1,c_y0,x_y1,model,100,'Text')
-		i_m = mAP.mAP(c_x1,x_x0,c_y1,x_y0,model,100,'Image')
+		t_m = mAP.mAP(des_c_x0,des_x_x1,des_c_y0,des_x_y1,model,100,'Text')
+		i_m = mAP.mAP(des_c_x1,des_x_x0,des_c_y1,des_x_y0,model,100,'Image')
 		string = filename + 'Avg:{:.2f}, Txt:{:.2f}, Img:{:.2f}.'.format((t_m+i_m)/2,t_m,i_m)
 		print(string)
 
