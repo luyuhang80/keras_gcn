@@ -2,8 +2,9 @@
 
 from lib import gcn_utils,graph,gcn,mAP
 import numpy as np
-import os,time
+import os,time,datetime
 import tensorflow as tf
+import tensorflow_hub as hub
 from keras import backend as K
 import keras
 import keras.layers as layers
@@ -14,6 +15,15 @@ from keras.callbacks import Callback,EarlyStopping
 os.environ["CUDA_VISIBLE_DEVICES"] = '0,3'
 os.environ["TF_CPP_MIN_LOG_LEVEL"]='3'
 save_dir = os.path.join(os.getcwd(),'checkpoints')
+now_time = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+path = os.path.join(save_dir,now_time)
+isExists= os.path.exists(path)
+if not isExists:
+	os.makedirs(path)
+else:
+	print(now_time+' path exists, create fail.')
+	sys.exit()
+
 data_path = '../data'
 BATCH_SIZE = 128
 # Initialize session
@@ -37,7 +47,7 @@ pred = layers.Dense(1,activation='sigmoid')(mul)
 model = Model(inputs=[input_text,input_image], outputs=pred)
 model.compile(loss=mAP.my_loss, optimizer='adam', metrics=[mAP.auc])
 filepath = 'model_{epoch:02d}_{val_auc:.2f}.HDF5'
-checkpoint = ModelCheckpoint(os.path.join(save_dir,filepath),verbose=1,save_weights_only='True',period=1)
+checkpoint = ModelCheckpoint(os.path.join(path,filepath),verbose=1,save_weights_only='True',period=1)
 model.summary()
 # histories = Histories()
 # model.load_weights('./checkpoints/model_06_2.21.HDF5')
