@@ -4,7 +4,7 @@ from lib import gcn_utils,graph,gcn,mAP
 import numpy as np
 import os,time
 import tensorflow as tf
-# import tensorflow_hub as hub
+import tensorflow_hub as hub
 from keras import backend as K
 import keras
 import keras.layers as layers
@@ -15,7 +15,7 @@ from keras.callbacks import Callback,EarlyStopping
 os.environ["CUDA_VISIBLE_DEVICES"] = '0,3'
 os.environ["TF_CPP_MIN_LOG_LEVEL"]='3'
 save_dir = os.path.join(os.getcwd(),'checkpoints')
-data_path = '../data'
+
 BATCH_SIZE = 128
 # Initialize session
 sess = tf.Session()
@@ -23,12 +23,23 @@ K.set_session(sess)
 
 train_val = [40000,5000]
 print('start prepairing data ...')
-# x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = gcn_utils.prepair_data(train_val,data_path)
+# x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = gcn_utils.prepair_data(train_val)
 # save and load data
-# gcn_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path)
-x0_train,x1_train,y_train,x0_test,x1_test,y_test = gcn_utils.load_data(data_path)
-x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1 = gcn_utils.load_test_data(data_path)
+# gcn_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test)
+x0_train,x1_train,y_train,x0_test,x1_test,y_test = gcn_utils.load_data()
+x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1 = gcn_utils.load_test_data()
+
 print('data ready ...')
+# Now instantiate the elmo model
+elmo_model = hub.Module("/Users/yuhanglu/Desktop/myproject/my_module_cache/latest", trainable=True)
+# elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
+print('load model completed ...')
+sess.run(tf.global_variables_initializer())
+sess.run(tf.tables_initializer())
+
+# Build our model
+def ElmoEmbedding(x):
+    return elmo_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
 
 input_text = layers.Input(shape=(x0_train.shape[1],), dtype=tf.float32)
 input_image = layers.Input(shape=(x1_train.shape[1],), dtype=tf.float32)
@@ -44,17 +55,22 @@ model.compile(loss=mAP.my_loss, optimizer='adam', metrics=[mAP.auc])
 # filepath = 'model_{epoch:02d}_{val_auc:.2f}.HDF5'
 # checkpoint = ModelCheckpoint(os.path.join(save_dir,filepath),verbose=1,save_weights_only='True',period=1)
 model.summary()
-# histories = Histories()
-model.load_weights('./checkpoints/model_02_0.88.HDF5')
-print("load model from disk")
-x_x0,x_x1 = mAP.get_desc(x_x0,x_x1,model)
-c_x0,c_x1 = mAP.get_desc(c_x0,c_x1,model)
-
-t_m = mAP.mAP(c_x0,x_x1,c_y0,x_y1,model,100,'Text')
-print('\nText map:',t_m)
-i_m = mAP.mAP(c_x1,x_x0,c_y1,x_y0,model,100,'Image')
-print('\nImage map:',i_m)
-print('Text map:',t_m, 'Image map:',i_m)
+for file in os.listdir(save_dir):
+	if os.path.splitext(file)[1] == '.HDF5':
+		filename = '\r{}: '.format(file)
+		string = filename
+		print(string,end='',flush=True)
+		model.load_weights(os.path.join(save_dir,file))
+		string += 'Descriptors building ... '
+		print(string,end ='',flush=True)
+		x_x0,x_x1 = mAP.get_desc(x_x0,x_x1,model)
+		c_x0,c_x1 = mAP.get_desc(c_x0,c_x1,model)
+		string += 'got .'
+		print(string,end='',flush=True)
+		t_m = mAP.mAP(c_x0,x_x1,c_y0,x_y1,model,100,'Text')
+		i_m = mAP.mAP(c_x1,x_x0,c_y1,x_y0,model,100,'Image')
+		string = filename + 'Avg:{:.2f}, Txt:{:.2f}, Img:{:.2f}.'.format((t_m+i_m)/2,t_m,i_m)
+		print(string)
 
 
 

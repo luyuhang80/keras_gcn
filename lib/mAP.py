@@ -30,9 +30,10 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 		t_now = time.time()
 		cost_time = get_time(t_now - t_start)
 		eta_time = get_time(int(((t_now-t_start)/(i+1))*(test_size-i)))
-		string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f. ETA: %s, cost: %s' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list),eta_time,cost_time)
-		print(string,end='',flush=True)
-	return '%.2f' % (t_map_sum/len(t_map_list))
+		# string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f. ETA: %s, cost: %s' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list),eta_time,cost_time)
+		# string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f. ETA: %s, cost: %s' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list),eta_time,cost_time)
+		# print(string,end='',flush=True)
+	return t_map_sum/len(t_map_list)
 
 def my_loss(y_true,y_pred):
 	lamda,mu = 0.35,0.8
@@ -47,11 +48,9 @@ def my_loss(y_true,y_pred):
 	return loss
 
 def get_desc(text,image,model):
-	print('Start build descriptors ... ')
 	# descriptor = K.function(inputs=[model.get_layer('input_1').input,model.get_layer('input_2').input],outputs=[model.get_layer('dense_1').output,model.get_layer('dense_2').output])
 	descriptor = Model(inputs=model.input,outputs=[model.layers[-4].output,model.layers[-3].output])
 	text,image = descriptor.predict([text,image])
-	print('descriptors got ... ')
 	return text,image
 
 def compute_list(match_list):
