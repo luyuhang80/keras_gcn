@@ -2,7 +2,7 @@
 
 from lib import gcn_utils,graph,gcn,mAP
 import numpy as np
-import os,time,datetime
+import os,time,datetime,sys
 import tensorflow as tf
 from keras import backend as K
 import keras
@@ -15,7 +15,7 @@ from keras.callbacks import Callback,EarlyStopping
 os.environ["CUDA_VISIBLE_DEVICES"] = '0,3'
 os.environ["TF_CPP_MIN_LOG_LEVEL"]='3'
 save_dir = os.path.join(os.getcwd(),'checkpoints')
-now_time = ''
+now_time = sys.argv[1]
 save_dir = os.path.join(save_dir,now_time)
 data_path = '../data/'
 BATCH_SIZE = 128
