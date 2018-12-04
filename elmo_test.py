@@ -12,7 +12,7 @@ from keras.models import Model
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import Callback,EarlyStopping
 #GPU 控制
-os.environ["CUDA_VISIBLE_DEVICES"] = '2'
+os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 os.environ["TF_CPP_MIN_LOG_LEVEL"]='3'
 save_dir = os.path.join(os.getcwd(),'checkpoints')
 now_time = sys.argv[1]
@@ -22,11 +22,11 @@ BATCH_SIZE = 128
 
 train_val = [40000,5000]
 print('start prepairing data ...')
-x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = elmo_utils.prepair_data(train_val)
+x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = elmo_utils.prepair_data(train_val,data_path)
 # save and load data
-elmo_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test)
-x0_train,x1_train,y_train,x0_test,x1_test,y_test = elmo_utils.load_data()
-x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1 = elmo_utils.load_test_data()
+elmo_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path)
+x0_train,x1_train,y_train,x0_test,x1_test,y_test = elmo_utils.load_data(data_path)
+x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1 = elmo_utils.load_test_data(data_path)
 print('data ready ...')
 model = net.build(x0_train.shape[1],x1_train.shape[1],act=None,loss_function=mAP.my_loss)
 max_ = (0,'None')

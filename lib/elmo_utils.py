@@ -49,7 +49,7 @@ def make_one_hot(data1):
     return (np.arange(10)==data1[:,None]).astype(np.integer)
 
 
-def prepair_data(train_val):
+def prepair_data(train_val,data_path):
 
     text = build_text()
     text_label = np.load(data_path+'/load_ny0.npy').astype(int) - 1
@@ -64,7 +64,7 @@ def prepair_data(train_val):
     c_x1=image[:693,:]
     c_y0=text_label[:693]
     c_y1=image_label[:693]
-    save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1)
+    save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
     # make pos and neg examples
     train_index=make_index(train_val[0],train_val[0],0)
     test_index=make_index(train_val[1],train_val[1],1)
@@ -88,7 +88,7 @@ def prepair_data(train_val):
     return x0_train,x1_train,make_one_hot(y0_train),make_one_hot(y1_train),y_train,\
      x0_test,x1_test, make_one_hot(y0_test),make_one_hot(y1_test),y_test
 
-def save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test):
+def save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path):
     np.save(data_path + '/elmo/x0_train.npy',x0_train)
     np.save(data_path + '/elmo/x1_train.npy',x1_train)
     np.save(data_path + '/elmo/y_train.npy',y_train)
@@ -96,7 +96,7 @@ def save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test):
     np.save(data_path + '/elmo/x1_test.npy',x1_test)
     np.save(data_path + '/elmo/y_test.npy',y_test)
     
-def load_data():
+def load_data(data_path):
     x0_train = np.load(data_path+'/elmo/x0_train.npy')
     x1_train = np.load(data_path+'/elmo/x1_train.npy')
     y_train = np.load(data_path+'/elmo/y_train.npy')
@@ -185,7 +185,7 @@ def index_shuffle(index):
     list_re.append(sec)
     return np.array(list_re)
 
-def load_test_data():
+def load_test_data(data_path):
     x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1 = \
     np.load(data_path+'/elmo/x_x0.npy'),\
     np.load(data_path+'/elmo/x_x1.npy'),\
@@ -196,7 +196,7 @@ def load_test_data():
     np.load(data_path+'/elmo/c_y0.npy'),\
     np.load(data_path+'/elmo/c_y1.npy')
     return x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1
-def save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1):
+def save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path):
     np.save(data_path+'/elmo/x_x0.npy',x_x0)
     np.save(data_path+'/elmo/x_x1.npy',x_x1)
     np.save(data_path+'/elmo/x_y0.npy',x_y0)
