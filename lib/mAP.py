@@ -53,17 +53,6 @@ def get_desc(text,image,model):
 	return text,image
 
 def compute_list(match_list):
-    # n = len(match_list)
-    # tp_counter = 0
-    # cumulate_precision = 0
-    # for i in range(0,n):
-    #     if match_list[i] == True:
-    #         tp_counter += 1
-    #         cumulate_precision += (float(tp_counter)/float(i+1))
-    # if tp_counter != 0:
-    #     av_precision = cumulate_precision/float(tp_counter)
-    #     return av_precision
-    # return 0
 	count,pres = 0,0
 	for i,t in enumerate(match_list):
 		if t==1:
