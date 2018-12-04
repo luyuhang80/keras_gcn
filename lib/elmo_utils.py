@@ -45,6 +45,7 @@ def build_text(data_path):
         file = open(data_path+'/texts_content/'+tmp+'.xml').read()
         data.append(file)
     return np.array(data)
+    
 def make_one_hot(data1):
     return (np.arange(10)==data1[:,None]).astype(np.integer)
 
