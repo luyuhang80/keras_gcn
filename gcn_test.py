@@ -46,7 +46,7 @@ for file in os.listdir(save_dir):
 		i_m = mAP.mAP(des_c_x1,des_x_x0,c_y1,x_y0,model,100,'Image')
 		string = filename + 'Avg:{:.2f}, Txt:{:.2f}, Img:{:.2f}.'.format((t_m+i_m)/2,t_m,i_m)
 		if (t_m+i_m)/2 > max_[0]:
-			max_ = ((t_m+i_m)/2,filename[1:-3])
+			max_ = ((t_m+i_m)/2,filename[1:-2])
 		print(string)
 print('The best model is:{}, avg map :{:.2f}'.format(max_[1],max_[0]))
 
