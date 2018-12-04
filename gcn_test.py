@@ -28,7 +28,7 @@ print('start prepairing data ...')
 x0_train,x1_train,y_train,x0_test,x1_test,y_test = gcn_utils.load_data(data_path)
 x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1 = gcn_utils.load_test_data(data_path)
 print('data ready ...')
-model = net.build(x0_train.shape[1],x1_train.shape[1],'sigmoid')
+model = net.build(x0_train.shape[1],x1_train.shape[1],act=None,loss_function=mAP.my_loss)
 max_ = (0,'None')
 for file in os.listdir(save_dir):
 	if os.path.splitext(file)[1] == '.HDF5':

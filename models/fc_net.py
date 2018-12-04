@@ -12,7 +12,7 @@ from keras.models import Model
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import Callback,EarlyStopping
 #GPU 控制
-def build(txt_shape,img_shape,act):
+def build(txt_shape,img_shape,act=None,loss_function=mAP.my_loss):
 	input_text = layers.Input(shape=(txt_shape,))
 	input_image = layers.Input(shape=(img_shape,))
 	text_embedding = layers.Dense(2048,activation='relu')(input_text)
@@ -21,7 +21,7 @@ def build(txt_shape,img_shape,act):
 	mul = layers.Multiply()([text_dense,image_dense])
 	pred = layers.Dense(1,activation=act)(mul)
 	model = Model(inputs=[input_text,input_image], outputs=pred)
-	model.compile(loss=mAP.my_loss, optimizer='adam', metrics=[mAP.auc])
+	model.compile(loss=loss_function, optimizer='adam', metrics=[mAP.auc])
 	model.summary()
 	return model
 # print("Saved model to disk")
