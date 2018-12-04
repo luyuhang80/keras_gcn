@@ -15,7 +15,7 @@ def ElmoEmbedding(x):
 	print('start load elmo model ... ',end='')
 	elmo_model = hub.Module("https://tfhub.dev/google/elmo/1", trainable=True)
 	print('completed ... ',flush=True)
-    return elmo_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
+	return elmo_model(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
 
 def build(txt_shape,img_shape,act=None,loss_function=mAP.my_loss):
 	input_text = layers.Input(shape=(txt_shape,))
