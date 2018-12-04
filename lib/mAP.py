@@ -32,20 +32,18 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 
 def my_loss(y_true,y_pred):
 	lamda,mu = 0.35,0.8
-    with tf.name_scope('loss'):
-	    with tf.name_scope('var_loss'):
-	        labels = tf.cast(self.ph_labels, tf.float32)
-	        shape = labels.get_shape()
-	        same_class = tf.boolean_mask(self.logits, tf.cast(y_true ,  tf.bool))
-	        diff_class = tf.boolean_mask(self.logits, tf.cast(1-y_true, tf.bool))
-	        same_mean, same_var = tf.nn.moments(same_class, [0])
-	        diff_mean, diff_var = tf.nn.moments(diff_class, [0])
-	        var_loss = same_var + diff_var
-	    with tf.name_scope('mean_loss'):
-	        mean_loss = lamda * tf.where(
-	            tf.greater(mu - (same_mean - diff_mean), 0),
-	            mu - (same_mean - diff_mean), 0)
-	    self.loss = (1) * var_loss + (1) * mean_loss
+	with tf.name_scope('loss'):
+		with tf.name_scope('var_loss'):
+			labels = tf.cast(self.ph_labels, tf.float32)
+			shape = labels.get_shape()
+			same_class = tf.boolean_mask(self.logits, tf.cast(y_true ,  tf.bool))
+			diff_class = tf.boolean_mask(self.logits, tf.cast(1-y_true, tf.bool))
+			same_mean, same_var = tf.nn.moments(same_class, [0])
+			diff_mean, diff_var = tf.nn.moments(diff_class, [0])
+			var_loss = same_var + diff_var
+		with tf.name_scope('mean_loss'):
+			mean_loss = lamda * tf.where(tf.greater(mu - (same_mean - diff_mean), 0),mu - (same_mean - diff_mean), 0)
+		self.loss =  var_loss + mean_loss
 	return loss
 
 
