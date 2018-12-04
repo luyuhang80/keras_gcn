@@ -29,7 +29,7 @@ x0_train,x1_train,y_train,x0_test,x1_test,y_test = gcn_utils.load_data(data_path
 x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1 = gcn_utils.load_test_data(data_path)
 print('data ready ...')
 model = net.build(x0_train.shape[1],x1_train.shape[1],act=None,loss_function=mAP.my_loss)
-max_ = (0,'None')
+max_ = (0,0,0,'None')
 for file in os.listdir(save_dir):
 	if os.path.splitext(file)[1] == '.HDF5':
 		filename = '\r{}: '.format(file)
@@ -46,9 +46,10 @@ for file in os.listdir(save_dir):
 		i_m = mAP.mAP(des_c_x1,des_x_x0,c_y1,x_y0,model,100,'Image')
 		string = filename + 'Avg:{:.2f}, Txt:{:.2f}, Img:{:.2f}.'.format((t_m+i_m)/2,t_m,i_m)
 		if (t_m+i_m)/2 > max_[0]:
-			max_ = ((t_m+i_m)/2,filename[1:-2])
+			max_ = ((t_m+i_m)/2,t_m,i_m,filename[1:-3])
 		print(string)
-print('The best model is:{}, avg map :{:.2f}'.format(max_[1],max_[0]))
+print('The best avg map:%.3f Txt:%.3f Img:%.3f Name:%s' % (max_[0],max_[1],max_[2],max_[3]))
+
 
 
 
