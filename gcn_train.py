@@ -34,7 +34,7 @@ print('start prepairing data ...')
 # save and load data
 # gcn_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path)
 x0_train,x1_train,y_train,x0_test,x1_test,y_test = gcn_utils.load_data(data_path)
-model = net.build(x0_train.shape[1],x1_train.shape[1])
+model = net.build(x0_train.shape[1],x1_train.shape[1],'sigmoid')
 filepath = 'model_{epoch:02d}_{val_auc:.2f}.HDF5'
 checkpoint = ModelCheckpoint(os.path.join(path,filepath),verbose=1,save_weights_only='True',period=1)
 my_callbacks = [checkpoint]
