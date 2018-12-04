@@ -58,8 +58,7 @@ def compute_list(match_list):
 	return 0
 
 def auc(y_true, y_pred):
-    y_pred = tf.nn.l2_normalize(y_pred)
-    
+    y_pred = tf.nn.l2_normalize(tf.squeeze(y_pred),0)
     auc = tf.metrics.auc(y_true, y_pred)[1]
     K.get_session().run(tf.local_variables_initializer())
     return auc
