@@ -38,7 +38,7 @@ def get_list(filename):
             res.append(tmp)
     return res
 
-def build_text():
+def build_text(data_path):
     data = []
     for line in open(data_path+'/total_txt_img_cat.list','r'):
         tmp = line.strip().split('\t')[0]
@@ -51,7 +51,7 @@ def make_one_hot(data1):
 
 def prepair_data(train_val,data_path):
 
-    text = build_text()
+    text = build_text(data_path)
     text_label = np.load(data_path+'/load_ny0.npy').astype(int) - 1
     image = np.squeeze(np.load(data_path+'/load_nx1.npy').astype(float))
     image_label = np.load(data_path+'/load_ny1.npy').astype(int) - 1
