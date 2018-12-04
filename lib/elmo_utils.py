@@ -66,8 +66,8 @@ def prepair_data(train_val,data_path):
     c_y1=image_label[:693]
     save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
     # make pos and neg examples
-    train_index=make_index(train_val[0],train_val[0],0)
-    test_index=make_index(train_val[1],train_val[1],1)
+    train_index=make_index(train_val[0],train_val[0],0,data_path)
+    test_index=make_index(train_val[1],train_val[1],1,data_path)
     train_index=index_shuffle(train_index)
     test_index=index_shuffle(test_index)
     x0_train=x_x0[train_index[0]]
@@ -128,7 +128,7 @@ def mAP(match_list):
         return av_precision
     return 0
 
-def make_index(n1,n2,dest):
+def make_index(n1,n2,dest,data_path):
     n2=(n2*11)/10
     if dest==0:
         n1=n1-2000
