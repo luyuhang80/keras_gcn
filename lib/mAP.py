@@ -32,7 +32,7 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 		eta_time = get_time(int(((t_now-t_start)/(i+1))*(test_size-i)))
 		string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f. ETA: %s, cost: %s' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list),eta_time,cost_time)
 		print(string,end='',flush=True)
-	return '%.2f' % (t_map_sum/len(t_map_list))
+	return t_map_sum/len(t_map_list)
 
 def my_loss(y_true,y_pred):
 	lamda,mu = 0.35,0.8
