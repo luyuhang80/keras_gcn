@@ -6,7 +6,6 @@ from keras.models import Model
 
 def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 	metric = K.function(inputs=[model.layers[-4].output,model.layers[-3].output],outputs=[model.layers[-1].output])
-	t_start = time.time()
 	retrieval_size, test_size  = x_x1.shape[0], c_x0.shape[0]
 	t_map_list,t_map_sum = [],0
 	for i in range(test_size):
@@ -27,10 +26,7 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 		tmp_map = compute_list(match_list)
 		t_map_list.append(tmp_map)
 		t_map_sum += tmp_map
-		t_now = time.time()
-		cost_time = get_time(t_now - t_start)
-		eta_time = get_time(int(((t_now-t_start)/(i+1))*(test_size-i)))
-		string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f. ETA: %s, cost: %s' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list),eta_time,cost_time)
+		string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f.' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list))
 		print(string,end='',flush=True)
 	return t_map_sum/len(t_map_list)
 
@@ -62,7 +58,7 @@ def compute_list(match_list):
 	return 0
 
 def auc(y_true, y_pred):
-    y_pred = tf.nn.sigmoid(y_pred)
+    y_pred = tf.nn.softmax(y_pred)
     auc = tf.metrics.auc(y_true, y_pred)[1]
     K.get_session().run(tf.local_variables_initializer())
     return auc

@@ -22,7 +22,6 @@ def build(txt_shape,img_shape,act=None,loss_function=mAP.my_loss):
 	input_text = layers.Input(shape=(txt_shape,))
 	input_image = layers.Input(shape=(img_shape,))
 	text_embedding = layers.Lambda(ElmoEmbedding, output_shape=(1024,))(input_text)
-	text_embedding = gcn.MyLayer(1)(input_text)
 	text_dense = layers.Dense(512,activation='relu')(text_embedding)
 	image_dense = layers.Dense(512,activation='relu')(input_image)
 	mul = layers.Multiply()([text_dense,image_dense])
