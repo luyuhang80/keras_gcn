@@ -47,11 +47,9 @@ def my_loss(y_true,y_pred):
 	return loss
 
 def get_desc(text,image,model):
-	print('Start build descriptors ... ')
 	# descriptor = K.function(inputs=[model.get_layer('input_1').input,model.get_layer('input_2').input],outputs=[model.get_layer('dense_1').output,model.get_layer('dense_2').output])
 	descriptor = Model(inputs=model.input,outputs=[model.layers[-4].output,model.layers[-3].output])
 	text,image = descriptor.predict([text,image])
-	print('descriptors got ... ')
 	return text,image
 
 def compute_list(match_list):
