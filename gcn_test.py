@@ -47,7 +47,7 @@ for file in os.listdir(save_dir):
 		string = filename + 'Avg:{:.2f}, Txt:{:.2f}, Img:{:.2f}.'.format((t_m+i_m)/2,t_m,i_m)
 		if (t_m+i_m)/2 > max_[0]:
 			max_ = ((t_m+i_m)/2,t_m,i_m,filename[1:-3])
-		print(string)
+		print(string,end='',flush=True)
 print('The best avg map:%.3f Txt:%.3f Img:%.3f Name:%s' % (max_[0],max_[1],max_[2],max_[3]))
 
 

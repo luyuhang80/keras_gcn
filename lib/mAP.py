@@ -26,21 +26,28 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 		tmp_map = compute_list(match_list)
 		t_map_list.append(tmp_map)
 		t_map_sum += tmp_map
-		string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f.' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list))
-		print(string,end='',flush=True)
+		# string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f.' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list))
+		# print(string,end='',flush=True)
 	return t_map_sum/len(t_map_list)
 
 def my_loss(y_true,y_pred):
 	lamda,mu = 0.35,0.8
-	same_mean = K.mean(K.abs(y_true * y_pred - y_true),-1)
-	same_var  = K.mean(K.square(y_true * y_pred - y_true),-1)
-	diff_mean = K.mean(K.abs((1. - y_true) * y_pred - y_true),-1)
-	diff_var  = K.mean(K.square((1. - y_true) * y_pred - y_true),-1)
-	mean_loss = lamda * K.maximum(mu - (same_mean -diff_mean),0)
-	#mean_loss = K.maximum(diff_mean - same_mean,0)
-	var_loss  = same_var + diff_var
-	loss = var_loss + mean_loss
+    with tf.name_scope('loss'):
+	    with tf.name_scope('var_loss'):
+	        labels = tf.cast(self.ph_labels, tf.float32)
+	        shape = labels.get_shape()
+	        same_class = tf.boolean_mask(self.logits, tf.cast(y_true ,  tf.bool))
+	        diff_class = tf.boolean_mask(self.logits, tf.cast(1-y_true, tf.bool))
+	        same_mean, same_var = tf.nn.moments(same_class, [0])
+	        diff_mean, diff_var = tf.nn.moments(diff_class, [0])
+	        var_loss = same_var + diff_var
+	    with tf.name_scope('mean_loss'):
+	        mean_loss = lamda * tf.where(
+	            tf.greater(mu - (same_mean - diff_mean), 0),
+	            mu - (same_mean - diff_mean), 0)
+	    self.loss = (1) * var_loss + (1) * mean_loss
 	return loss
+
 
 def get_desc(text,image,model):
 	# descriptor = K.function(inputs=[model.get_layer('input_1').input,model.get_layer('input_2').input],outputs=[model.get_layer('dense_1').output,model.get_layer('dense_2').output])
