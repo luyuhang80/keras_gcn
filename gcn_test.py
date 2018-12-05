@@ -12,6 +12,7 @@ from keras.models import Model
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import Callback,EarlyStopping
 #GPU 控制
+K.clear_session()
 os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 os.environ["TF_CPP_MIN_LOG_LEVEL"]='3'
 save_dir = os.path.join(os.getcwd(),'checkpoints')
