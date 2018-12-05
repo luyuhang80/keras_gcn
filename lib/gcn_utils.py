@@ -31,9 +31,17 @@ def build_text():
         file = open(data_path+'/texts_content/'+tmp+'.xml').read()
         data.append(file)
     return np.array(data)
+    
 def make_one_hot(data1):
     return (np.arange(10)==data1[:,None]).astype(np.integer)
 
+def load_bow(filelist):
+    data,labs = [],[]
+    for line in open(filelist):
+        line = line.strip()
+        labs.append(int(line[-5]))
+        data.append(np.load(file))
+    return data,labs
 
 def prepair_data(train_val,data_path):
 
