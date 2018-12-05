@@ -43,7 +43,7 @@ def build_text(data_path):
     for line in open(data_path+'/total_txt_img_cat.list','r'):
         tmp = line.strip().split('\t')[0]
         file = open(data_path+'/texts_content/'+tmp+'.xml').read()
-        data.append(file)
+        data.append([file])
     return np.array(data)
     
 def make_one_hot(data1):
@@ -57,11 +57,11 @@ def prepair_data(train_val,data_path):
     image = np.squeeze(np.load(data_path+'/load_nx1.npy').astype(float))
     image_label = np.load(data_path+'/load_ny1.npy').astype(int) - 1
 
-    x_x0=text[693:]
+    x_x0=text[693:,:]
     x_x1=image[693:,:]
     x_y0=text_label[693:]
     x_y1=image_label[693:]
-    c_x0=text[:693]
+    c_x0=text[:693,:]
     c_x1=image[:693,:]
     c_y0=text_label[:693]
     c_y1=image_label[:693]
@@ -71,20 +71,18 @@ def prepair_data(train_val,data_path):
     test_index=make_index(train_val[1],train_val[1],1,data_path)
     train_index=index_shuffle(train_index)
     test_index=index_shuffle(test_index)
-    x0_train=x_x0[train_index[0]]
+    x0_train=x_x0[train_index[0],:]
     x1_train=x_x1[train_index[1],:]
     y0_train=x_y0[train_index[0]]
     y1_train=x_y1[train_index[1]]
     y_train= np.ones([len(train_index[0])])
     y_train[x_y0[train_index[0]]!=x_y1[train_index[1]]]=0
-    x0_test=c_x0[test_index[0]]
+    x0_test=c_x0[test_index[0],:]
     x1_test=c_x1[test_index[1],:]
     y0_test=c_y0[test_index[0]]
     y1_test=c_y1[test_index[1]]
     y_test= np.ones([len(test_index[0])])
     y_test[c_y0[test_index[0]]!=c_y1[test_index[1]]]=0
-    x1_train = np.squeeze(x1_train)
-    x1_test = np.squeeze(x1_test)
 
     return x0_train,x1_train,make_one_hot(y0_train),make_one_hot(y1_train),y_train,\
      x0_test,x1_test, make_one_hot(y0_test),make_one_hot(y1_test),y_test

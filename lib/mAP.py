@@ -32,6 +32,7 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 
 def my_loss(y_true,y_pred):
 	lamda,mu = 0.35,0.8
+	y_true = tf.cast(y_true,tf.float32)
 	with tf.name_scope('loss'):
 		with tf.name_scope('var_loss'):
 			same_class = tf.boolean_mask(y_pred, tf.cast(y_true ,  tf.bool))
@@ -41,7 +42,7 @@ def my_loss(y_true,y_pred):
 			var_loss = same_var + diff_var
 		with tf.name_scope('mean_loss'):
 			mean_loss = lamda * tf.where(tf.greater(mu - (same_mean - diff_mean), 0),mu - (same_mean - diff_mean), 0)
-		loss =  var_loss + mean_loss
+		loss =  (1) * var_loss + (1) * mean_loss
 	return loss
 
 

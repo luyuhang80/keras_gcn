@@ -5,7 +5,7 @@ import numpy as np
 import os,time,datetime
 import tensorflow as tf
 from keras import backend as K
-from models import gcn_net as net
+from models import elmo_net as net
 import keras
 import keras.layers as layers
 from keras.models import Model
