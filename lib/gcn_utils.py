@@ -35,13 +35,17 @@ def build_text():
 def make_one_hot(data1):
     return (np.arange(10)==data1[:,None]).astype(np.integer)
 
-def load_bow(filelist):
-    data,labs = [],[]
-    for line in open(filelist):
-        line = line.strip()
-        labs.append(int(line[-5]))
-        data.append(np.load(file))
-    return data,labs
+def load_bow(data_path):
+    now,data = 0
+    for line in open(data_path+'/total_txt_img_cat.list','r'):
+        tmp,lab = line.strip().split('\t')[0],line.strip().split('\t')[2]
+        s = str(now)
+        while len(s)<4:
+            s = '0' + s
+        arr = np.load('/home1/yul/elmo/text_elmo'+s+_+lab.strip()+'.npy')
+        data.append(arr)
+        now += 1
+    return np.array(data)
 
 def prepair_data(train_val,data_path):
 
