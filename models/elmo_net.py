@@ -20,7 +20,7 @@ def ElmoEmbedding(x):
 
 def build(txt_shape,img_shape,act=None,loss_function=mAP.my_loss):
 	K.clear_session()
-	input_text = layers.Input(shape=(txt_shape,))
+	input_text = layers.Input(shape=(txt_shape,),dtype=tf.string)
 	input_image = layers.Input(shape=(img_shape,))
 	text_embedding = layers.Lambda(ElmoEmbedding, output_shape=(1024,))(input_text)
 	text_dense = layers.Dense(512,activation='relu')(text_embedding)

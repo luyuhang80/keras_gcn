@@ -49,16 +49,16 @@ def load_bow(data_path):
 
 def prepair_data(train_val,data_path):
 
-    text = np.squeeze(np.load(data_path + '/load_nx0.npy').astype(float))
+    text = np.load(data_path + '/load_nx0.npy').astype(float)
     text_label = np.load(data_path + '/load_ny0.npy').astype(int) - 1
     image = np.squeeze(np.load(data_path + '/load_nx1.npy').astype(float))
     image_label = np.load(data_path + '/load_ny1.npy').astype(int) - 1
 
-    x_x0=text[693:,:]
+    x_x0=text[693:,:,:]
     x_x1=image[693:,:]
     x_y0=text_label[693:]
     x_y1=image_label[693:]
-    c_x0=text[:693,:]
+    c_x0=text[:693,:,:]
     c_x1=image[:693,:]
     c_y0=text_label[:693]
     c_y1=image_label[:693]
@@ -68,13 +68,13 @@ def prepair_data(train_val,data_path):
     test_index=make_index(train_val[1],train_val[1],1,data_path)
     train_index=index_shuffle(train_index)
     test_index=index_shuffle(test_index)
-    x0_train=x_x0[train_index[0],:]
+    x0_train=x_x0[train_index[0],:,:]
     x1_train=x_x1[train_index[1],:]
     y0_train=x_y0[train_index[0]]
     y1_train=x_y1[train_index[1]]
     y_train= np.ones([len(train_index[0])])
     y_train[x_y0[train_index[0]]!=x_y1[train_index[1]]]=0
-    x0_test=c_x0[test_index[0],:]
+    x0_test=c_x0[test_index[0],:,:]
     x1_test=c_x1[test_index[1],:]
     y0_test=c_y0[test_index[0]]
     y1_test=c_y1[test_index[1]]

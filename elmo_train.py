@@ -33,7 +33,8 @@ print('start prepairing data ...')
 # save and load data
 # elmo_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path)
 x0_train,x1_train,y_train,x0_test,x1_test,y_test = elmo_utils.load_data(data_path)
-model = net.build(x0_train.shape[1],x1_train.shape[1],act=None,loss_function=mAP.my_loss)
+model = net.build(x0_train.shape[1],x1_train.shape[1],act_1='relu',act_2='sigmoid',loss_function='binary_crossentropy')
+# model = net.build(x0_train.shape[1],x1_train.shape[1],act_1=None,act_2=None,loss_function=mAP.my_loss)
 filepath = 'model_{epoch:02d}_{val_auc:.2f}.HDF5'
 checkpoint = ModelCheckpoint(os.path.join(path,filepath),verbose=1,save_weights_only='True',period=1)
 my_callbacks = [checkpoint]

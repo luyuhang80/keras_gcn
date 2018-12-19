@@ -17,13 +17,13 @@ class MyLayer(Layer):
 
     def build(self, input_shape):
         # Create a trainable weight variable for this layer.
-        self.w_gcn = self.add_weight(name='kernel',shape=([3,self.output_dim]),initializer='uniform',trainable=True)
         self.w_rlu = self.add_weight(name='kernel',shape=([1,1,self.output_dim]),initializer='uniform',trainable=True)
         # self.w_rlu = self.add_weight(name='kernel',shape=([3,1], self.output_dim),initializer='uniform',trainable=True)
         super(MyLayer, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
-        x = tf.expand_dims(x,2)
+        # if len(x.get_shape())<2:
+            # x = tf.expand_dims(x,2)
         g0 = scipy.sparse.csr_matrix(self.build_graph()).astype(np.float32)
         graphs0 = []
         for i in range(3):
@@ -38,7 +38,6 @@ class MyLayer(Layer):
                 with tf.name_scope('pooling'):
                     x = MaxPooling1D(1)(x)
         x = K.squeeze(x,2)
-        
         return x
     def my_gcn(self,x,L):
         Fout,neibs = 1,3
@@ -71,6 +70,7 @@ class MyLayer(Layer):
         # Filter: Fin*Fout filters of order K, i.e. one filterbank per feature pair.
         # W = _weight_variable([Fin*K, Fout])
         # x = tf.matmul(x, W)  # N*M x Fout
+        self.w_gcn = self.add_weight(name='kernel',shape=([Fin*neibs,self.output_dim]),initializer='uniform',trainable=True)
         x = K.dot(x,self.w_gcn)
         return tf.reshape(x, [-1, M, Fout])  # N x M x Fout
 
@@ -89,5 +89,5 @@ class MyLayer(Layer):
             y += 1
         return graph
     def compute_output_shape(self, input_shape):
-        return (input_shape)
+        return (input_shape[0],input_shape[1])
 
