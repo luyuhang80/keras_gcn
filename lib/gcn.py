@@ -69,8 +69,6 @@ class MyLayer(Layer):
         # Filter: Fin*Fout filters of order K, i.e. one filterbank per feature pair.
         # W = _weight_variable([Fin*K, Fout])
         # x = tf.matmul(x, W)  # N*M x Fout
-        init_range = np.sqrt(6.0 / (shape[0] + shape[1]))
-        initial = tf.random_uniform_initializer(minval=-init_range, maxval=init_range)
         self.w_gcn = self.add_weight(name='w_gcn_'+th,shape=([Fin*neibs,self.output_dim]),initializer='glorot_uniform',trainable=True)
         x = K.dot(x,self.w_gcn)
         return tf.reshape(x, [-1, M, Fout])  # N x M x Fout
