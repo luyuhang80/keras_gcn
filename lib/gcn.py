@@ -18,7 +18,7 @@ class MyLayer(Layer):
 
     def build(self, input_shape):
         # Create a trainable weight variable for this layer.
-        self.w_rlu = self.add_weight(name='w_rlu',shape=([1,1,self.output_dim]),initializer=self.my_init,trainable=True)
+        self.w_rlu = self.add_weight(name='w_rlu',shape=([1,1,self.output_dim]),initializer='glorot_uniform',trainable=True)
         # self.w_rlu = self.add_weight(name='kernel',shape=([3,1], self.output_dim),initializer='uniform',trainable=True)
         super(MyLayer, self).build(input_shape)  # Be sure to call this at the end
 
@@ -71,14 +71,9 @@ class MyLayer(Layer):
         # x = tf.matmul(x, W)  # N*M x Fout
         init_range = np.sqrt(6.0 / (shape[0] + shape[1]))
         initial = tf.random_uniform_initializer(minval=-init_range, maxval=init_range)
-        self.w_gcn = self.add_weight(name='w_gcn_'+th,shape=([Fin*neibs,self.output_dim]),initializer=self.my_init,trainable=True)
+        self.w_gcn = self.add_weight(name='w_gcn_'+th,shape=([Fin*neibs,self.output_dim]),initializer='glorot_uniform',trainable=True)
         x = K.dot(x,self.w_gcn)
         return tf.reshape(x, [-1, M, Fout])  # N x M x Fout
-
-    def my_init(self):
-        init_range = np.sqrt(6.0 / (shape[0] + shape[1]))
-        initial = RandomUniform(minval=-init_range, maxval=init_range)
-        return initial
 
     def brelu(self,x):
         return activations.relu(x + self.w_rlu)
