@@ -8,15 +8,14 @@ from keras import backend as K
 import keras
 import keras.layers as layers
 from keras.models import Model
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import Callback,EarlyStopping
+from keras.callbacks import ModelCheckpoint,Callback
 #GPU 控制
 def build(txt_shape,img_shape,act_1=None,act_2=None,loss_function=mAP.my_loss):
 	K.clear_session()
 	input_text = layers.Input(shape=(txt_shape,))
 	input_image = layers.Input(shape=(img_shape,))
 	text_embedding = gcn.MyLayer(1)(input_text)
-	text_att = AttentionLayer()(text_embedding)
+	# text_att = AttentionLayer()(text_embedding)
 	text_dense = layers.Dense(512,activation=act_1)(text_att)
 	image_dense = layers.Dense(512,activation=act_1)(input_image)
 	mul = layers.Multiply()([text_dense,image_dense])

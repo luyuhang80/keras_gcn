@@ -4,6 +4,7 @@ from lib import graph
 import tensorflow as tf
 import scipy.sparse
 import numpy as np
+from  keras.initializers import RandomUniform
 from keras import backend as K
 from keras.engine.topology import Layer
 from keras.layers import MaxPooling1D
@@ -17,13 +18,11 @@ class MyLayer(Layer):
 
     def build(self, input_shape):
         # Create a trainable weight variable for this layer.
-        self.w_rlu = self.add_weight(name='kernel',shape=([1,1,self.output_dim]),initializer='uniform',trainable=True)
+        self.w_rlu = self.add_weight(name='w_rlu',shape=([1,1,self.output_dim]),initializer=self.my_init,trainable=True)
         # self.w_rlu = self.add_weight(name='kernel',shape=([3,1], self.output_dim),initializer='uniform',trainable=True)
         super(MyLayer, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
-        # if len(x.get_shape())<2:
-            # x = tf.expand_dims(x,2)
         g0 = scipy.sparse.csr_matrix(self.build_graph()).astype(np.float32)
         graphs0 = []
         for i in range(3):
@@ -32,14 +31,14 @@ class MyLayer(Layer):
         for i in range(2):
             with tf.variable_scope('gcn{}'.format(i + 1)):
                 with tf.name_scope('filter'):
-                    x = self.my_gcn(x, L[i])
+                    x = self.my_gcn(x, L[i], str(i))
                 with tf.name_scope('bias_relu'):
                     x = self.brelu(x)
                 with tf.name_scope('pooling'):
-                    x = MaxPooling1D(1)(x)
+                    x = MaxPooling1D(pool_size=1,padding='same')(x)
         x = K.squeeze(x,2)
         return x
-    def my_gcn(self,x,L):
+    def my_gcn(self,x,L,th):
         Fout,neibs = 1,3
         _ , M, Fin = x.get_shape()
         M, Fin = int(M), int(Fin)
@@ -70,9 +69,16 @@ class MyLayer(Layer):
         # Filter: Fin*Fout filters of order K, i.e. one filterbank per feature pair.
         # W = _weight_variable([Fin*K, Fout])
         # x = tf.matmul(x, W)  # N*M x Fout
-        self.w_gcn = self.add_weight(name='kernel',shape=([Fin*neibs,self.output_dim]),initializer='uniform',trainable=True)
+        init_range = np.sqrt(6.0 / (shape[0] + shape[1]))
+        initial = tf.random_uniform_initializer(minval=-init_range, maxval=init_range)
+        self.w_gcn = self.add_weight(name='w_gcn_'+th,shape=([Fin*neibs,self.output_dim]),initializer=self.my_init,trainable=True)
         x = K.dot(x,self.w_gcn)
         return tf.reshape(x, [-1, M, Fout])  # N x M x Fout
+
+    def my_init(self):
+        init_range = np.sqrt(6.0 / (shape[0] + shape[1]))
+        initial = RandomUniform(minval=-init_range, maxval=init_range)
+        return initial
 
     def brelu(self,x):
         return activations.relu(x + self.w_rlu)
