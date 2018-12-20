@@ -18,7 +18,7 @@ class MyLayer(Layer):
 
     def build(self, input_shape):
         # Create a trainable weight variable for this layer.
-        self.w_rlu = self.add_weight(name='w_rlu',shape=([1,1,self.output_dim]),initializer='glorot_uniform',trainable=True)
+        self.w_rlu = self.add_weight(name='w_rlu',shape=([1,1,self.output_dim]),initializer='zeros',trainable=True)
         # self.w_rlu = self.add_weight(name='kernel',shape=([3,1], self.output_dim),initializer='uniform',trainable=True)
         super(MyLayer, self).build(input_shape)  # Be sure to call this at the end
 
