@@ -37,8 +37,9 @@ model = net.build(x0_train.shape,x1_train.shape[1],act_1='relu',act_2='sigmoid',
 filepath = 'model_{epoch:02d}_{val_auc:.2f}.HDF5'
 checkpoint = ModelCheckpoint(os.path.join(path,filepath),verbose=1,save_weights_only='True',period=1)
 my_callbacks = [checkpoint]
-model.fit([x0_train,x1_train],y_train,epochs=30,batch_size=BATCH_SIZE,callbacks=my_callbacks)
 
+model.fit([x0_train,x1_train],y_train,validation_data=\
+	([x0_test,x1_test],y_test),epochs=30,batch_size=BATCH_SIZE,callbacks=my_callbacks)
 
 
 
