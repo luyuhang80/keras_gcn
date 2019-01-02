@@ -1,12 +1,11 @@
 # Copyright (c) 2018 Yuhang Lu <luyuhang@iie.ac.cn>
 
-from lib import gcn_utils,graph,gcn,mAP
+from lib import att_utils,graph,gcn,mAP
 import numpy as np
 import os,time,datetime
 import tensorflow as tf
-import tensorflow_hub as hub
 from keras import backend as K
-from models import gcn_net as net
+from models import att_net as net
 import keras
 import keras.layers as layers
 from keras.models import Model
@@ -24,23 +23,21 @@ if not isExists:
 else:
 	print(now_time+' path exists, create fail.')
 	sys.exit()
-data_path = '../data'
+data_path = '../../myproject/data'
 BATCH_SIZE = 128
 # Initialize session
 train_val = [40000,5000]
 print('start prepairing data ...')
-x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = gcn_utils.prepair_data(train_val,data_path)
+x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = att_utils.prepair_data(train_val,data_path)
 # save and load data
-gcn_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path)
-x0_train,x1_train,y_train,x0_test,x1_test,y_test = gcn_utils.load_data(data_path)
-print('x0_train',x0_train.shape)
+# att_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path)
+# x0_train,x1_train,y_train,x0_test,x1_test,y_test = att_utils.load_data(data_path)
 model = net.build(x0_train.shape,x1_train.shape[1],act_1='relu',act_2='sigmoid',loss_function='binary_crossentropy')
 # model = net.build(x0_train.shape[1],x1_train.shape[1],act_1=None,act_2=None,loss_function=mAP.my_loss)
 filepath = 'model_{epoch:02d}_{val_auc:.2f}.HDF5'
 checkpoint = ModelCheckpoint(os.path.join(path,filepath),verbose=1,save_weights_only='True',period=1)
 my_callbacks = [checkpoint]
-model.fit([x0_train,x1_train],y_train,validation_data=\
-	([x0_test,x1_test],y_test),epochs=30,batch_size=BATCH_SIZE,callbacks=my_callbacks)
+model.fit([x0_train,x1_train],y_train,epochs=30,batch_size=BATCH_SIZE,callbacks=my_callbacks)
 
 
 

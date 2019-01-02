@@ -77,7 +77,7 @@ class MyLayer(Layer):
         return activations.relu(x + self.w_rlu)
 
     def build_graph(self):
-        filename = '../data/gcn/txt_graph.txt'
+        filename = '../../myproject/data/gcn/txt_graph.txt'
         file = open(filename).read().strip().split('\n')
         graph=np.zeros((len(file),len(file)),dtype=np.int)
         y = 0
