@@ -13,23 +13,50 @@ from keras.engine.topology import Layer
 
 #GPU 控制
 def build(txt_shape,img_shape,act_1=None,act_2=None,loss_function=mAP.my_loss):
-	K.clear_session()
-	input_text = layers.Input(shape=(None,),dtype='int32')
-	input_image = layers.Input(shape=(img_shape,))
-	embeddings = layers.Embedding(20000, 128)(input_text)
-	embeddings = Position_Embedding()(embeddings)
-	O_seq = Attention(8,16)([embeddings,embeddings,embeddings])
-	O_seq = layers.GlobalAveragePooling1D()(O_seq)
-	text_embedding = layers.Dropout(0.5)(O_seq)
-	text_dense = layers.Dense(512,activation=act_1)(text_embedding)
-	image_dense = layers.Dense(512,activation=act_1)(input_image)
-	mul = layers.Multiply()([text_dense,image_dense])
-	pred = layers.Dense(1,activation=act_2)(mul)
-	model = Model(inputs=[input_text,input_image], outputs=pred)
-	model.compile(loss=loss_function, optimizer='adam', metrics=[mAP.auc])
-	model.summary()
-	return model
+    K.clear_session()
+    word_index,embedding_matrix = loading()
+    input_text = layers.Input(shape=(None,),dtype='int32')
+    input_image = layers.Input(shape=(img_shape,))
+    embeddings = layers.Embedding(len(word_index)+1, 128,weights=[embedding_matrix],input_length=400,trainable=True)(input_text)
+    embeddings = Position_Embedding()(embeddings)
+    O_seq = Attention(8,16)([embeddings,embeddings,embeddings])
+    O_seq = layers.GlobalAveragePooling1D()(O_seq)
+    text_embedding = layers.Dropout(0.5)(O_seq)
+    text_dense = layers.Dense(512,activation=act_1)(text_embedding)
+    image_dense = layers.Dense(512,activation=act_1)(input_image)
+    mul = layers.Multiply()([text_dense,image_dense])
+    pred = layers.Dense(1,activation=act_2)(mul)
+    model = Model(inputs=[input_text,input_image], outputs=pred)
+    model.compile(loss=loss_function, optimizer='adam', metrics=[mAP.auc])
+    model.summary()
+    return model
 
+def loading():
+    w_path = '../../myproject/data/'
+    word_index,now = {},0
+    for line in open(os.path.join(w_path, 'clean_vocab.txt')):
+        line = line.strip()
+        word = line.split()[0]
+        if len(word)>0:
+            word_index[word] = now
+            now += 1
+    embeddings_index = {}
+    # f = open(os.path.join('../../myproject/data/', 'vectors.txt'))
+    f = open(os.path.join(w_path, 'embeddings.txt'))
+    for line in f:
+        values = line.split()
+        word = values[0]
+        coefs = np.asarray(values[1:], dtype='float32')
+        embeddings_index[word] = coefs
+
+    embedding_matrix = np.zeros((len(word_index) + 1, 128))
+    for word, i in word_index.items():
+        embedding_vector = embeddings_index.get(word)
+        if embedding_vector is not None:
+            # words not found in embedding index will be all-zeros.
+            embedding_matrix[i] = embedding_vector
+
+    return word_index,embedding_matrix
 
 class Position_Embedding(Layer):
     
