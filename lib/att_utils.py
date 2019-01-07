@@ -12,17 +12,16 @@ from keras.preprocessing import sequence
 
 
 def load_wl(file):
-    f = open(file+'/fre_8_new.dic')
-    con = f.read()
-    word_list = eval(con)
-    idx,lis = {},{}
-    for i,w in enumerate(word_list):
-        lis[w] = i
-        idx[i] = w
-    return idx,lis
+    dic,idx = {},0
+    for line in open(file+'/clean_vocab.txt'):
+        line = line.strip()
+        word = line.split()[0]
+        dic[word] = idx
+        idx += 1
+    return dic
 
 def load_data_idx(data_path):
-    _,wl = load_wl(data_path)
+    wl = load_wl(data_path)
     data = []
     for line in open(data_path+'/total_txt_img_cat.list','r'):
         tmp = line.strip().split('\t')[0]
@@ -201,13 +200,15 @@ def load_test_data(data_path):
     np.load(data_path+'/att/c_x1.npy'),\
     np.load(data_path+'/att/c_y0.npy'),\
     np.load(data_path+'/att/c_y1.npy')
+
+    x_x0,c_x0 = load_data_idx()
     return x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1
 def save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path):
-    np.save(data_path+'/att/x_x0.npy',x_x0)
+    # np.save(data_path+'/att/x_x0.npy',x_x0)
     np.save(data_path+'/att/x_x1.npy',x_x1)
     np.save(data_path+'/att/x_y0.npy',x_y0)
     np.save(data_path+'/att/x_y1.npy',x_y1)
-    np.save(data_path+'/att/c_x0.npy',c_x0)
+    # np.save(data_path+'/att/c_x0.npy',c_x0)
     np.save(data_path+'/att/c_x1.npy',c_x1)
     np.save(data_path+'/att/c_y0.npy',c_y0)
     np.save(data_path+'/att/c_y1.npy',c_y1)
