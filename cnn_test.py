@@ -7,7 +7,7 @@ import tensorflow as tf
 from keras import backend as K
 import keras
 import keras.layers as layers
-from models import att_net as net
+from models import cnn_net as net
 from keras.models import Model
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import Callback,EarlyStopping
