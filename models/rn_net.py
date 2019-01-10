@@ -15,7 +15,16 @@ def build(txt,img,loss_function=mAP.my_loss):
     # K.set_learning_phase(1)
     input_text = layers.Input(shape=(txt[1],))
     input_image = layers.Input(shape=(img[1],img[2]))
-    pred = RNet()([input_text,input_image])
+    # txt
+    text_dense = gcn.MyLayer(1)(input_text)
+    text_dense = layers.Dense(512,activation='relu')(text_dense)
+    # img
+    image_dense = layers.GlobalAveragePooling1D()(input_image)
+    image_dense = layers.Dense(512,activation='relu')(image_dense)
+
+    mul = layers.Multiply()([text_dense,image_dense])
+    pred = layers.Dense(1,activation='sigmoid')(mul)
+    # pred = RNet()([text_dense,input_image])
     model = Model(inputs=[input_text,input_image], outputs=pred)
     model.compile(loss=loss_function, optimizer='adam', metrics=[mAP.auc])
     model.summary()
