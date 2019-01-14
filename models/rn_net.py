@@ -19,9 +19,10 @@ def build(txt,img,loss_function=mAP.my_loss):
     text_dense = gcn.MyLayer(1)(input_text)
     text_dense = layers.Dense(512,activation='relu')(text_dense)
     # img
-    image_dense = RNet()([text_dense,input_image])
-    # image_dense = layers.GlobalAveragePooling1D()(input_image)
-    image_dense = layers.Dense(512,activation='relu')(image_dense)
+    image_rn = RNet()([text_dense,input_image])
+    image_att = BilinearAttentionLayer()([text_dense,input_image])
+    image_mul = layers.Multiply()([image_rn,image_att])
+    image_dense = layers.Dense(512,activation='relu')(image_mul)
 
     mul = layers.Multiply()([text_dense,image_dense])
     pred = layers.Dense(1,activation='sigmoid')(mul)
@@ -61,16 +62,21 @@ class RNet(layers.Layer):
                                       # initializer='uniform',
                                       # trainable=True)
         super(RNet, self).build(input_shape)  # Be sure to call this at the end
-    def call(self, x):
-        assert isinstance(x, list)
+    def call(self, inputs):
+        assert isinstance(inputs, list)
         '''
         :param X: [batch_size, Nr, in_dim]
         :return: relation map:[batch_size, relation_glimpse, Nr, Nr]
         relational_x: [bs, Nr, in_dim]
         Nr = Nr
         '''
-        Q, X = x
+        Q, X = inputs
         X_ = X
+        x = X[:,:,4:]
+        b = X[:,:,:4]
+        pos = b
+        # pos = self.pos_encoding(b)
+        X = K.concatenate([X,pos],2)
         # # img part 
         bs, Nr, in_dim = X.get_shape() 
         # print('bs',bs,'Nr',Nr, 'in_dim',in_dim)
@@ -110,44 +116,90 @@ class RNet(layers.Layer):
             relational_X = relational_X + K.batch_dot(relation_map1[:,g,:,:], X_) + K.batch_dot(relation_map0[:,g,:,:], X_)
         relational_X = relational_X/(2*self.relation_glimpse) #(relational_X/self.relation_glimpse + self.nonlinear(X_))/2
         _ , f1, f2 = relational_X.get_shape()
-        relational_X = K.reshape(relational_X,[-1,f1*f2])
+        # relational_X = K.reshape(relational_X,[-1,f1*f2])
+        relational_X = K.sum(relational_X,1)
 
         return [relational_X]
 
+    def pos_encoding(self,b):
+        bs, vlocs, bdim = b.get_shape()
+        print('b',b.get_shape())
+        x = b[:,:,0]
+        y = b[:,:,1]
+        w = b[:,:,2]
+        h = b[:,:,3]
+        xi = K.tile(K.expand_dims(x,1),[1,vlocs,1])
+        xj = K.tile(K.expand_dims(x,2),[1,1,vlocs])
+        print('xi',xi.get_shape())
+        print('xj',xj.get_shape())
+        x_delta = K.abs(xi-xj)
+        yi = K.tile(K.expand_dims(y,1),[1,vlocs,1])
+        yj = K.tile(K.expand_dims(y,2),[1,1,vlocs])
+        y_delta = K.abs(yi-yj)
+        wi = K.tile(K.expand_dims(w,1),[1,vlocs,1])
+        wj = K.tile(K.expand_dims(w,2),[1,1,vlocs])
+        hi = K.tile(K.expand_dims(h,1),[1,vlocs,1])
+        hj = K.tile(K.expand_dims(h,2),[1,1,vlocs])
+        g1 = x_delta/(wj+1e-5*K.ones_like(wj))
+        g1 = K.expand_dims(g1,3)
+        g2 = x_delta/(hj+1e-5*K.ones_like(hj))
+        g2 = K.expand_dims(g2,3)
+        g3 = K.expand_dims(K.abs(wi/wj),3)
+        g4 = K.expand_dims(K.abs(hi/hj),3)
+        g = K.concatenate([g1,g2,g3,g4],axis=3)
+        return g
     def compute_output_shape(self, input_shape):
         assert isinstance(input_shape, list)
         shape_a, shape_b = input_shape
-        return [(shape_b[0],shape_b[1]*shape_b[2])]
+        # return [(shape_b[0],shape_b[1],shape_b[2])]
+        return [(shape_b[0],shape_b[2])]
 
 
 
-class MyLayer(layers.Layer):
+class BilinearAttentionLayer(layers.Layer):
 
-    def __init__(self, **kwargs):
-        # self.output_dim = output_dim
-        super(MyLayer, self).__init__(**kwargs)
+    def __init__(self, num_hid=1, dropout=0.5, **kwargs):
+        self.num_hid = num_hid
+        self.dropout = dropout
+        super(BilinearAttentionLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
         assert isinstance(input_shape, list)
-        self.fc1 = layers.Dense(512)
-        self.fc2 = layers.Dense(512)
-        self.fc3 = layers.Dense(1)
-        # Create a trainable weight variable for this layer.
-        # self.kernel = self.add_weight(name='kernel',
-                                      # shape=(input_shape[0][1], self.output_dim),
-                                      # initializer='uniform',
-                                      # trainable=True)
-        super(MyLayer, self).build(input_shape)  # Be sure to call this at the end
+
+        self.v_proj = layers.Dense(self.num_hid)
+        self.q_proj = layers.Dense(self.num_hid)
+        self.drop_out = layers.Dropout(self.dropout)
+        # self.h_mat = K.placeholder(shape=(1,1,self.num_hid))
+        self.h_mat = self.add_weight(name='h_mat',shape=([1,1,self.num_hid]),initializer='normal',trainable=True)
+        self.h_bias = self.add_weight(name='h_bias',shape=([1,1,1]),initializer='normal',trainable=True)
+        # self.h_mat = nn.Parameter(torch.Tensor(1, 1, num_hid).normal_())
+        # self.h_bias = nn.Parameter(torch.Tensor(1, 1, 1).normal_())
+        super(BilinearAttentionLayer, self).build(input_shape)  # Be sure to call this at the end
+    
+    def logits(self, v, q):
+        batch, k, _ = v.get_shape()
+        v_proj = self.drop_out(self.v_proj(v)) # [batch, k, num_hid]
+        q_proj = K.permute_dimensions(K.expand_dims(self.drop_out(self.q_proj(q)),1),(0,2,1))# [batch, num_hid, 1]
+        v_proj = v_proj * self.h_mat
+        logits = K.batch_dot(v_proj, q_proj) + self.h_bias #[batch, k, 1]
+        return logits
 
     def call(self, x):
         assert isinstance(x, list)
-        a, b = x
-        _,N1,N2 = b.get_shape()
-        b = K.reshape(b,[-1,N1*N2])
-        a = self.fc1(a)
-        b = self.fc2(b)
-        c = self.fc3(a*b)
-        return [c]
+        q,v = x
+        """
+        v: [batch, k, vdim]
+        q: [batch, qdim]
+        """
+        # if prev_logits is None:
+        logits = self.logits(v, q) #[batch, k, 1]
+        # else:
+            # logits = self.logits(v, q) + prev_logits
+        w = K.softmax(logits, 1) #[batch, k, 1]
+        v = w * v  #[batch, k, vdim]
+        v = K.sum(v,1)
+        # return v, logits, w
+        return [v]
 
     def compute_output_shape(self, input_shape):
         assert isinstance(input_shape, list)
