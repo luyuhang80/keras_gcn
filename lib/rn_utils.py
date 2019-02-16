@@ -2,6 +2,7 @@ import os
 import numpy as np
 import time
 import random
+import keras,h5py
 from random import choice
 from scipy.sparse import csr_matrix
 from scipy import sparse
@@ -49,12 +50,21 @@ def load_bow(data_path):
 
 def prepair_data(train_val,data_path):
 
+    f = h5py.File(data_path + '/v_objs.h5','r')
+    rois = f['data']['rois'].value
+    objs = f['data']['v_objs'].value
+    image = np.concatenate((rois,objs),2)
+    image_label = f['labels'].value
+    f.close() 
+    
     # text = np.load(data_path + '/load_nx0.npy').astype(float)
     text = load_bow(data_path)
     text_label = np.load(data_path + '/load_ny0.npy').astype(int) - 1
+
     # image = np.squeeze(np.load(data_path + '/load_nx1.npy').astype(float))
-    image = np.load(data_path+'/images_obj.npy')
-    image_label = np.load(data_path + '/load_ny1.npy').astype(int) - 1
+    # image = np.load(data_path+'/images_obj.npy')
+    # image_label = np.load(data_path + '/load_ny1.npy').astype(int) - 1
+
 
     x_x0=text[693:,:]
     x_x1=image[693:,:,:]
@@ -128,17 +138,22 @@ def make_index(n1,n2,dest,data_path):
         filename=data_path+'/testset_txt_img_cat.list'
         r1=[i for i in range(693)]
         r2=[i for i in range(693)]
-    list=get_label(filename)
+    lis = get_label(filename)
+    all_num = 0
+    for i in range(10):
+        all_num += len(lis[i])
     ind=[]
     for i in range(10):
         # print(choice(list[i]))
-        r1+=[choice(list[i]) for _ in range(int(n1/10))]
-        r2+=[choice(list[i]) for _ in range(int(n1/10))]
+        t_n = int(n1 * (len(lis[i])/all_num))
+        r1 +=[choice(lis[i]) for _ in range(t_n)]
+        r2 +=[choice(lis[i]) for _ in range(t_n)]
+        
     for p in range(10):
         for q in range(10):
             if p!=q:
-                r1+=[choice(list[p]) for _ in range(int(n2/100))]
-                r2+=[choice(list[q]) for _ in range(int(n2/100))]
+                r1+=[choice(lis[p]) for _ in range(int(n2/100))]
+                r2+=[choice(lis[q]) for _ in range(int(n2/100))]
     ind.append(r1)
     ind.append(r2)
     arr=np.array(ind)
