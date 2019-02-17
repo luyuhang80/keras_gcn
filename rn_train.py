@@ -1,6 +1,7 @@
 # Copyright (c) 2018 Yuhang Lu <luyuhang@iie.ac.cn>
 
 from lib import rn_utils,graph,gcn,mAP
+from lib.h5_data_pair_loader import PosNegLoader
 import numpy as np
 import os,time,datetime
 import tensorflow as tf
@@ -11,7 +12,6 @@ import keras,h5py
 import keras.layers as layers
 from keras.models import Model
 from keras.callbacks import ModelCheckpoint,Callback
-from data.h5_data_pair_loader import PosNegLoader
 
 #GPU 控制
 K.clear_session()
