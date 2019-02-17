@@ -57,26 +57,30 @@ def prepair_data(train_val,data_path,train_loader,val_loader):
     image_label = f['labels'].value
     f.close() 
     
-    t = h5py.File(data_path+'text_bow_unified.h5','r')
-    text = t['data'].value
+    t = h5py.File('/Users/yuhanglu/Desktop/text_bow_unified.h5','r')
+    text = t['data']['features'].value
     text_label = t['labels'].value
 
-    x0_train = text[train_loader[0]]
-    x1_train = image[train_loader[1]]
-    y0_train=x_y0[train_loader[0]]
-    y1_train=x_y1[train_loader[1]]
-    y_train= np.ones([len(train_loader[0])])
-    y_train[y0_train!=y1_train]=0
+    x0_train,x1_train,y_train = [],[],[]
+    for batch in range(train_loader.n_batches):
+        batch_text, batch_image, labels = train_loader.get_async_loaded()
+        x0_train.append(batch_text)
+        x1_train.append(batch_image)
+        y_train.append(labels)
+        if batch + 1 < train_loader.n_batches:
+            train_loader.async_load_batch(batch+1)
 
-    x0_test = text[val_loader[0]]
-    x1_test = text[val_loader[1]]
-    y0_test=c_y0[test_index[0]]
-    y1_test=c_y1[test_index[1]]
-    y_test= np.ones([len(test_index[0])])
-    y_test[y0_test!=y1_test]=0
+    x0_test,x1_test,y_test = [],[],[]
+    for batch in range(val_loader.n_batches):
+        batch_text, batch_image, labels = val_loader.get_async_loaded()
+        x0_test.append(batch_text)
+        x1_test.append(batch_image)
+        y_test.append(labels)
+        if batch + 1 < val_loader.n_batches:
+            val_loader.async_load_batch(batch+1)
 
-    return x0_train,x1_train,make_one_hot(y0_train),make_one_hot(y1_train),y_train,\
-     x0_test,x1_test, make_one_hot(y0_test),make_one_hot(y1_test),y_test
+    return np.array(x0_train),np.array(x1_train),make_one_hot(np.array(y0_train)),make_one_hot(np.array(y1_train)),np.array(y_train),\
+     np.array(x0_test),np.array(x1_test), make_one_hot(np.array(y0_test)),make_one_hot(np.array(y1_test)),np.array(y_test)
 
 def save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path):
     np.save(data_path + '/gcn/x0_train.npy',x0_train)
