@@ -48,7 +48,7 @@ def load_bow(data_path):
         now += 1
     return np.array(data)
 
-def prepair_data(train_val,data_path):
+def prepair_data(train_val,data_path,train_loader,val_loader):
 
     f = h5py.File(data_path + '/v_objs.h5','r')
     rois = f['data']['rois'].value
@@ -57,41 +57,23 @@ def prepair_data(train_val,data_path):
     image_label = f['labels'].value
     f.close() 
     
-    # text = np.load(data_path + '/load_nx0.npy').astype(float)
-    text = load_bow(data_path)
-    text_label = np.load(data_path + '/load_ny0.npy').astype(int) - 1
+    t = h5py.File(data_path+'text_bow_unified.h5','r')
+    text = t['data'].value
+    text_label = t['labels'].value
 
-    # image = np.squeeze(np.load(data_path + '/load_nx1.npy').astype(float))
-    # image = np.load(data_path+'/images_obj.npy')
-    # image_label = np.load(data_path + '/load_ny1.npy').astype(int) - 1
+    x0_train = text[train_loader[0]]
+    x1_train = image[train_loader[1]]
+    y0_train=x_y0[train_loader[0]]
+    y1_train=x_y1[train_loader[1]]
+    y_train= np.ones([len(train_loader[0])])
+    y_train[y0_train!=y1_train]=0
 
-
-    x_x0=text[693:,:]
-    x_x1=image[693:,:,:]
-    x_y0=text_label[693:]
-    x_y1=image_label[693:]
-    c_x0=text[:693,:]
-    c_x1=image[:693,:,:]
-    c_y0=text_label[:693]
-    c_y1=image_label[:693]
-    save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
-    # make pos and neg examples
-    train_index=make_index(train_val[0],train_val[0],0,data_path)
-    test_index=make_index(train_val[1],train_val[1],1,data_path)
-    train_index=index_shuffle(train_index)
-    test_index=index_shuffle(test_index)
-    x0_train=x_x0[train_index[0],:]
-    x1_train=x_x1[train_index[1],:,:]
-    y0_train=x_y0[train_index[0]]
-    y1_train=x_y1[train_index[1]]
-    y_train= np.ones([len(train_index[0])])
-    y_train[x_y0[train_index[0]]!=x_y1[train_index[1]]]=0
-    x0_test=c_x0[test_index[0],:]
-    x1_test=c_x1[test_index[1],:,:]
+    x0_test = text[val_loader[0]]
+    x1_test = text[val_loader[1]]
     y0_test=c_y0[test_index[0]]
     y1_test=c_y1[test_index[1]]
     y_test= np.ones([len(test_index[0])])
-    y_test[c_y0[test_index[0]]!=c_y1[test_index[1]]]=0
+    y_test[y0_test!=y1_test]=0
 
     return x0_train,x1_train,make_one_hot(y0_train),make_one_hot(y1_train),y_train,\
      x0_test,x1_test, make_one_hot(y0_test),make_one_hot(y1_test),y_test
