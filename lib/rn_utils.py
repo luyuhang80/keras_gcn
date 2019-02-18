@@ -50,14 +50,15 @@ def load_bow(data_path):
 
 def prepair_data(train_val,data_path,train_loader,val_loader):
 
-    f = h5py.File(data_path + '/v_objs.h5','r')
+    data_path = '/home1/yul/yzq/data/cmplaces'
+    f = h5py.File(data_path + '/natural_v_objs.h5','r')
     rois = f['data']['rois'].value
     objs = f['data']['v_objs'].value
     image = np.concatenate((rois,objs),2)
     image_label = f['labels'].value
     f.close() 
     
-    t = h5py.File('/Users/yuhanglu/Desktop/text_bow_unified.h5','r')
+    t = h5py.File(data_path+'/text_bow_unified.h5','r')
     text = t['data']['features'].value
     text_label = t['labels'].value
 
