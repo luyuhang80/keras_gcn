@@ -19,7 +19,6 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 			tmp_y1 = np.repeat(c_y0[i],retrieval_size)
 			tmp_text = x_x1
 			tmp_y0 = x_y1
-		print(s,tmp_image.shpe)
 		tmp_y= np.ones([retrieval_size])
 		tmp_y[tmp_y0!=tmp_y1]=0
 		pred = np.squeeze(metric([tmp_text,tmp_image]))
@@ -27,6 +26,7 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 		tmp_map = compute_list(match_list)
 		t_map_list.append(tmp_map)
 		t_map_sum += tmp_map
+		print(s,tmp_image.shape,tmp_text.shape)
 		# string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f.' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list))
 		# print(string,end='',flush=True)
 	return t_map_sum/len(t_map_list)
@@ -49,8 +49,10 @@ def my_loss(y_true,y_pred):
 
 def get_desc(text,image,model):
 	# descriptor = K.function(inputs=[model.get_layer('input_1').input,model.get_layer('input_2').input],outputs=[model.get_layer('dense_1').output,model.get_layer('dense_2').output])
-	descriptor = Model(inputs=model.input,outputs=[model.layers[-4].output,model.layers[-3].output])
-	text,image = descriptor.predict([text,image])
+	descriptor1 = Model(inputs=model.layers[0],outputs=model.layers[-4])
+	descriptor2 = Model(inputs=model.layers[1],outputs=model.layers[-3])
+	text = descriptor1.predict(text)
+	image = descriptor2.predict(image)
 	return text,image
 
 def compute_list(match_list):
