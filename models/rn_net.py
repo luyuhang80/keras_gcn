@@ -206,4 +206,4 @@ class BilinearAttentionLayer(layers.Layer):
     def compute_output_shape(self, input_shape):
         assert isinstance(input_shape, list)
         shape_a, shape_b = input_shape
-        return [(shape_a[0],shape_a[1],1)]
+        return [(shape_a[0],shape_b[1],1)]
