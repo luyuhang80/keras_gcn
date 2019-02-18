@@ -147,7 +147,7 @@ def make_index(train_val,text_label,image_label):
             tmp1 = choice(range(len(txt_dic)))
             tmp2 = choice(range(len(txt_dic)))
             idx1.append(choice(txt_dic[tmp1]))
-            idx2.append(choice(txt_dic[str(tmp2)]))
+            idx2.append(choice(txt_dic[tmp2]))
     ind1 = []
     ind1.append(idx1)
     ind1.append(idx2)
