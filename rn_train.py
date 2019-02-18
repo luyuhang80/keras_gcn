@@ -32,18 +32,6 @@ BATCH_SIZE = 128
 train_val = [2000,500]
 print('start prepairing data ...')
 
-# initialize data loader
-text_h5_path = "/home1/yul/yzq/data/cmplaces/text_bow_unified.h5"
-image_h5_path = "/home1/yul/yzq/data/cmplaces/natural50k_onr.h5"
-adjmat_path = '/home1/yul/yzq/data/cmplaces/txt_graph_knn_unified.txt'
-n_classes = 205
-label_start_with_zero = True
-n_train = 819200
-n_val = 8192
-
-train_loader = PosNegLoader(text_h5_path, image_h5_path, "train", "train", n_train, n_train,batch_size=BATCH_SIZE, n_classes=n_classes, shuffle=True, whole_batches=True)
-val_loader = PosNegLoader(text_h5_path, image_h5_path, "val", "val", n_val, n_val,batch_size=BATCH_SIZE, n_classes=n_classes, shuffle=True, whole_batches=True)
-
 x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = rn_utils.prepair_data(train_val,data_path,train_loader,val_loader)
 # save and load data
 rn_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path)

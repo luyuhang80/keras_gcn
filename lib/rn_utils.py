@@ -4,6 +4,7 @@ import time
 import random
 import keras,h5py
 from random import choice
+from sklearn.model_selection import train_test_split
 from scipy.sparse import csr_matrix
 from scipy import sparse
 
@@ -48,7 +49,7 @@ def load_bow(data_path):
         now += 1
     return np.array(data)
 
-def prepair_data(train_val,data_path,train_loader,val_loader):
+def prepair_data(train_val,data_path):
 
     data_path = '/home1/yul/yzq/data/cmplaces'
     f = h5py.File(data_path + '/natural_v_objs.h5','r')
@@ -62,7 +63,30 @@ def prepair_data(train_val,data_path,train_loader,val_loader):
     text = t['data']['features'].value
     text_label = t['labels'].value
 
-    train_index,val_index = make_index(train_val,text_label,image_label)
+    x_x0,c_x0,x_x1,c_x1,x_y0,c_y0,x_y1,c_y1 = \
+    train_test_split(text,image,text_label,image_label,test_size=0.1, random_state=0)
+    save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
+    
+    train_index,test_index = make_index(train_val,x_y0,x_y1)
+
+    train_index=index_shuffle(train_index)
+    test_index=index_shuffle(test_index)
+
+    x0_train=x_x0[train_index[0],:]
+    x1_train=x_x1[train_index[1],:,:]
+    y0_train=x_y0[train_index[0]]
+    y1_train=x_y1[train_index[1]]
+    y_train= np.ones([len(train_index[0])])
+    y_train[x_y0[train_index[0]]!=x_y1[train_index[1]]]=0
+    x0_test=c_x0[test_index[0],:]
+    x1_test=c_x1[test_index[1],:,:]
+    y0_test=c_y0[test_index[0]]
+    y1_test=c_y1[test_index[1]]
+    y_test= np.ones([len(test_index[0])])
+    y_test[c_y0[test_index[0]]!=c_y1[test_index[1]]]=0
+
+    return x0_train,x1_train,make_one_hot(y0_train),make_one_hot(y1_train),y_train,\
+     x0_test,x1_test, make_one_hot(y0_test),make_one_hot(y1_test),y_test
 
     #return np.array(x0_train),np.array(x1_train),make_one_hot(np.array(y0_train)),make_one_hot(np.array(y1_train)),np.array(y_train),\
     # np.array(x0_test),np.array(x1_test), make_one_hot(np.array(y0_test)),make_one_hot(np.array(y1_test)),np.array(y_test)
@@ -121,12 +145,24 @@ def make_index(train_val,text_label,image_label):
             tmp2 = choice(range(len(txt_dic)))
             idx1.append(choice(txt_dic[str(tmp1)]))
             idx2.append(choice(txt_dic[str(tmp2)]))
-    print('idx1',len(idx1))
-    print('idx2',len(idx2))
-    ind = []
-    ind.append(idx1)
-    ind.append(idx2)
-    return np.array(ind)  
+    ind1 = []
+    ind1.append(idx1)
+    ind1.append(idx2)
+
+    ids1,ids2 = [],[]
+    for i in range(len(txt_dic)):
+        for j in range(n2):
+            ids1.append(choice(txt_dic[i]))
+            ids2.append(choice(img_dic[i]))
+            tmp1 = choice(range(len(txt_dic)))
+            tmp2 = choice(range(len(txt_dic)))
+            ids1.append(choice(txt_dic[tmp1]))
+            ids2.append(choice(txt_dic[tmp2]))
+    ind2 = []
+    ind2.append(ids1)
+    ind2.append(ids2)
+
+    return np.array(ind1),np.array(ind2)  
 
 def get_label(filename):
     file=open(filename,'r+')
