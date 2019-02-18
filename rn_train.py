@@ -32,7 +32,7 @@ BATCH_SIZE = 128
 train_val = [2000,500]
 print('start prepairing data ...')
 
-x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = rn_utils.prepair_data(train_val,data_path,train_loader,val_loader)
+x0_train,x1_train,y0_train,y1_train,y_train,x0_test,x1_test,y0_test,y1_test,y_test = rn_utils.prepair_data(train_val,data_path)
 # save and load data
 rn_utils.save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path)
 x0_train,x1_train,y_train,x0_test,x1_test,y_test = rn_utils.load_data(data_path)
