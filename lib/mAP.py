@@ -19,6 +19,7 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 			tmp_y1 = np.repeat(c_y0[i],retrieval_size)
 			tmp_text = x_x1
 			tmp_y0 = x_y1
+		print(s,tmp_image.shpe)
 		tmp_y= np.ones([retrieval_size])
 		tmp_y[tmp_y0!=tmp_y1]=0
 		pred = np.squeeze(metric([tmp_text,tmp_image]))
