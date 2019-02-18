@@ -5,7 +5,7 @@ from keras import backend as K
 from keras.models import Model
 
 def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
-	metric = K.function(inputs=[model.layers[-4].output,model.layers[-3].output],outputs=[model.layers[-1].output])
+	metric = K.function(inputs=[model.layers[2].output,model.layers[-3].output],outputs=[model.layers[-1].output])
 	retrieval_size, test_size  = x_x1.shape[0], c_x0.shape[0]
 	t_map_list,t_map_sum = [],0
 	for i in range(test_size):
@@ -26,7 +26,7 @@ def mAP(c_x0,x_x1,c_y0,x_y1,model,k,s):
 		tmp_map = compute_list(match_list)
 		t_map_list.append(tmp_map)
 		t_map_sum += tmp_map
-		print(s,tmp_image.shape,tmp_text.shape)
+		# print(s,tmp_image.shape,tmp_text.shape)
 		# string = '\r%s retrievaling, %d / %d mAP: %.2f, total mAP: %.2f.' % (s,i+1,test_size,tmp_map,t_map_sum/len(t_map_list))
 		# print(string,end='',flush=True)
 	return t_map_sum/len(t_map_list)
@@ -49,10 +49,8 @@ def my_loss(y_true,y_pred):
 
 def get_desc(text,image,model):
 	# descriptor = K.function(inputs=[model.get_layer('input_1').input,model.get_layer('input_2').input],outputs=[model.get_layer('dense_1').output,model.get_layer('dense_2').output])
-	descriptor1 = Model(inputs=model.layers[0],outputs=model.layers[-4])
-	descriptor2 = Model(inputs=model.layers[1],outputs=model.layers[-3])
-	text = descriptor1.predict(text)
-	image = descriptor2.predict(image)
+	descriptor = Model(inputs=[model.layers[0].input,model.layers[3].input],outputs=[model.layers[2].output,model.layers[-3].output])
+	text,image = descriptor.predict([text,image])
 	return text,image
 
 def compute_list(match_list):
