@@ -158,8 +158,8 @@ def make_index(num,text_label,image_label):
         for j in range(n1):
             idx1.append(choice(txt_dic[i]))
             idx2.append(choice(img_dic[i]))
-            tmp1 = choice(range(len(txt_dic)))
-            tmp2 = choice(range(len(txt_dic)))
+            tmp1 = choice(a)
+            tmp2 = choice(b)
             idx1.append(choice(txt_dic[tmp1]))
             idx2.append(choice(img_dic[tmp2]))
     ind1 = []
