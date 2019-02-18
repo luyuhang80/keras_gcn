@@ -19,9 +19,10 @@ def build(txt,img,loss_function=mAP.my_loss):
     text_dense = gcn.MyLayer(1)(input_text)
     text_dense = layers.Dense(512,activation='relu')(text_dense)
     # img
-    image_rn = RNet()([text_dense,input_image])
-    image_att = BilinearAttentionLayer()([text_dense,input_image])
-    image_mul = layers.Multiply()([image_rn,image_att])
+    image_mul = layers.GlobalAveragePooling1D()(input_image)
+    # image_rn = RNet()([text_dense,input_image])
+    # image_att = BilinearAttentionLayer()([text_dense,input_image])
+    # image_mul = layers.Multiply()([image_rn,image_att])
     image_dense = layers.Dense(512,activation='relu')(image_mul)
 
     mul = layers.Multiply()([text_dense,image_dense])
