@@ -3,7 +3,7 @@ import numpy as np
 import time
 import random
 import keras,h5py
-from random import choice
+from numpy.random import choice
 from sklearn.model_selection import train_test_split
 from scipy.sparse import csr_matrix
 from scipy import sparse
@@ -76,7 +76,7 @@ def prepair_data(train_val,data_path):
         image = image[idx,:,:]
         image_label = image_label[idx]
 
-    x_x0,c_x0,x_y0,c_y0，x_x1,c_x1,x_y1,c_y1 = \
+    x_x0,c_x0,x_y0,c_y0,x_x1,c_x1,x_y1,c_y1 = \
     train_test_split(text,image,text_label,image_label,test_size=0.1, random_state=0)
 
     save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
@@ -151,14 +151,17 @@ def make_index(num,text_label,image_label):
 
     n1 = int(num/len(txt_dic))
     idx1,idx2 = [],[]
-    for i in range(len(txt_dic)):
+    a = txt_dic.keys()
+    b = img_dic.keys()
+    intersection = list(set(a).intersection(set(b)))
+    for i in intersection:
         for j in range(n1):
             idx1.append(choice(txt_dic[i]))
             idx2.append(choice(img_dic[i]))
             tmp1 = choice(range(len(txt_dic)))
             tmp2 = choice(range(len(txt_dic)))
             idx1.append(choice(txt_dic[tmp1]))
-            idx2.append(choice(txt_dic[tmp2]))
+            idx2.append(choice(img_dic[tmp2]))
     ind1 = []
     ind1.append(idx1)
     ind1.append(idx2)
