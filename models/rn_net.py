@@ -19,10 +19,11 @@ def build(txt,img,loss_function=mAP.my_loss):
     text_dense = gcn.MyLayer(1)(input_text)
     text_dense = layers.Dense(512,activation='relu')(text_dense)
     # img
-    image_mul = layers.GlobalAveragePooling1D()(input_image)
+    # image_mul = layers.GlobalAveragePooling1D()(input_image)
     # image_rn = RNet()([text_dense,input_image])
-    # image_att = BilinearAttentionLayer()([text_dense,input_image])
-    # image_mul = layers.Multiply()([image_rn,image_att])
+    image_att = BilinearAttentionLayer()([text_dense,input_image])
+    image_mul = layers.Multiply()([input_image,image_att])
+    image_mul = layers.GlobalAveragePooling1D()(image_mul)
     image_dense = layers.Dense(512,activation='relu')(image_mul)
 
     mul = layers.Multiply()([text_dense,image_dense])
@@ -34,7 +35,7 @@ def build(txt,img,loss_function=mAP.my_loss):
 
 class RNet(layers.Layer):
 
-    def __init__(self, conv_channels=256, out_dim=512, relation_glimpse=1, dropout_ratio=.5, **kwargs):
+    def __init__(self, conv_channels=256, out_dim=512, relation_glimpse=1, dropout_ratio=.2, **kwargs):
         self.out_dim = out_dim
         self.conv_channels = conv_channels
         self.relation_glimpse = relation_glimpse
@@ -205,4 +206,4 @@ class BilinearAttentionLayer(layers.Layer):
     def compute_output_shape(self, input_shape):
         assert isinstance(input_shape, list)
         shape_a, shape_b = input_shape
-        return [(shape_a[0],1)]
+        return [(shape_a[0],shape_a[1],1)]
