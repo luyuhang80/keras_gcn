@@ -80,13 +80,13 @@ def prepair_data(train_val,data_path):
     y0_train=x_y0[train_index[0]]
     y1_train=x_y1[train_index[1]]
     y_train= np.ones([len(train_index[0])])
-    y_train[x_y0[train_index[0]]!=x_y1[train_index[1]]]=0
-    x0_test=c_x0[test_index[0],:]
-    x1_test=c_x1[test_index[1],:,:]
-    y0_test=c_y0[test_index[0]]
-    y1_test=c_y1[test_index[1]]
+    y_train[y0_train!=y1_train]=0
+    x0_test=x_x0[test_index[0],:]
+    x1_test=x_x1[test_index[1],:,:]
+    y0_test=x_y0[test_index[0]]
+    y1_test=x_y1[test_index[1]]
     y_test= np.ones([len(test_index[0])])
-    y_test[c_y0[test_index[0]]!=c_y1[test_index[1]]]=0
+    y_test[y0_test!=y1_test]=0
 
     return x0_train,x1_train,make_one_hot(y0_train),make_one_hot(y1_train),y_train,\
      x0_test,x1_test, make_one_hot(y0_test),make_one_hot(y1_test),y_test
