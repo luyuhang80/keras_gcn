@@ -61,26 +61,10 @@ def prepair_data(train_val,data_path,train_loader,val_loader):
     text = t['data']['features'].value
     text_label = t['labels'].value
 
-    x0_train,x1_train,y_train = [],[],[]
-    for batch in range(train_loader.n_batches):
-        batch_text, batch_image, labels = train_loader.get_async_loaded()
-        x0_train.append(batch_text)
-        x1_train.append(batch_image)
-        y_train.append(labels)
-        if batch + 1 < train_loader.n_batches:
-            train_loader.async_load_batch(batch+1)
+    train_index,val_index = make_index(train_val,text_label,image_label)
 
-    x0_test,x1_test,y_test = [],[],[]
-    for batch in range(val_loader.n_batches):
-        batch_text, batch_image, labels = val_loader.get_async_loaded()
-        x0_test.append(batch_text)
-        x1_test.append(batch_image)
-        y_test.append(labels)
-        if batch + 1 < val_loader.n_batches:
-            val_loader.async_load_batch(batch+1)
-
-    return np.array(x0_train),np.array(x1_train),make_one_hot(np.array(y0_train)),make_one_hot(np.array(y1_train)),np.array(y_train),\
-     np.array(x0_test),np.array(x1_test), make_one_hot(np.array(y0_test)),make_one_hot(np.array(y1_test)),np.array(y_test)
+    #return np.array(x0_train),np.array(x1_train),make_one_hot(np.array(y0_train)),make_one_hot(np.array(y1_train)),np.array(y_train),\
+    # np.array(x0_test),np.array(x1_test), make_one_hot(np.array(y0_test)),make_one_hot(np.array(y1_test)),np.array(y_test)
 
 def save_data(x0_train,x1_train,y_train,x0_test,x1_test,y_test,data_path):
     np.save(data_path + '/gcn/x0_train.npy',x0_train)
@@ -112,38 +96,36 @@ def mAP(match_list):
         return av_precision
     return 0
 
-def make_index(n1,n2,dest,data_path):
-    n2=(n2*11)/10
-    if dest==0:
-        n1=n1-2000
-        filename=data_path+'/trainset_txt_img_cat.list'
-        r1=[i for i in range(2173)]
-        r2=[i for i in range(2173)]
-    if dest==1:
-        n1=n1-1000
-        filename=data_path+'/testset_txt_img_cat.list'
-        r1=[i for i in range(693)]
-        r2=[i for i in range(693)]
-    lis = get_label(filename)
-    all_num = 0
-    for i in range(10):
-        all_num += len(lis[i])
-    ind=[]
-    for i in range(10):
-        # print(choice(list[i]))
-        t_n = int(n1 * (len(lis[i])/all_num))
-        r1 +=[choice(lis[i]) for _ in range(t_n)]
-        r2 +=[choice(lis[i]) for _ in range(t_n)]
-        
-    for p in range(10):
-        for q in range(10):
-            if p!=q:
-                r1+=[choice(lis[p]) for _ in range(int(n2/100))]
-                r2+=[choice(lis[q]) for _ in range(int(n2/100))]
-    ind.append(r1)
-    ind.append(r2)
-    arr=np.array(ind)
-    return arr  
+def make_index(train_val,text_label,image_label):
+    txt_dic,img_dic = {},{}
+    for i in range(len(text_label)):
+        if text_label[i] not in txt_dic:
+            txt_dic[text_label[i]] = [i]
+        else:
+            txt_dic[text_label[i]].append(i)
+
+        if image_label[i] not in img_dic:
+            img_dic[image_label[i]] = [i]
+        else:
+            img_dic[image_label[i]].append(i)
+
+    n1 = int(train_val[0]/len(txt_dic))
+    n2 = int(train_val[1]/len(txt_dic))
+    idx1,idx2 = [],[]
+    for i in range(len(txt_dic)):
+        for j in range(n1):
+            idx1.append(choice(txt_dic[str(i)]))
+            idx2.append(choice(img_dic[str(i)]))
+            tmp1 = choice(range(len(txt_dic)))
+            tmp2 = choice(range(len(txt_dic)))
+            idx1.append(choice(txt_dic[str(tmp1)]))
+            idx2.append(choice(txt_dic[str(tmp2)]))
+    print('idx1',len(idx1))
+    print('idx2',len(idx2))
+    ind = []
+    ind.append(idx1)
+    ind.append(idx2)
+    return np.array(ind)  
 
 def get_label(filename):
     file=open(filename,'r+')
