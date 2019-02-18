@@ -62,15 +62,27 @@ def prepair_data(train_val,data_path):
     t = h5py.File(data_path1+'/text_bow_unified.h5','r')
     text = t['data']['features'].value
     text_label = t['labels'].value
+    idx = []
+    if len(text_label)>len(image_label):
+        ind = range(len(image_label))
+        for i in range(len(image_label)):
+            idx.append(choice(ind,replace=False))
+        text = text[idx,:]
+        text_label = text_label[idx]
+    else:
+        ind = range(len(text_label))
+        for i in range(len(text_label)):
+            idx.append(choice(ind,replace=False))
+        image = image[idx,:,:]
+        image_label = image_label[idx]
 
-    x_x0,c_x0,x_y0,c_y0 = \
-    train_test_split(text,text_label,test_size=0.1, random_state=0)
-    x_x1,c_x1,x_y1,c_y1 = \
-    train_test_split(image,image_label,test_size=0.1,random_state=0)
+    x_x0,c_x0,x_y0,c_y0，x_x1,c_x1,x_y1,c_y1 = \
+    train_test_split(text,image,text_label,image_label,test_size=0.1, random_state=0)
 
     save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
     
-    train_index,test_index = make_index(train_val,x_y0,x_y1)
+    train_index = make_index(train_val[0],x_y0,x_y1)
+    test_index = make_index(train_val[1],c_y0,c_y1)
 
     train_index=index_shuffle(train_index)
     test_index=index_shuffle(test_index)
@@ -81,10 +93,10 @@ def prepair_data(train_val,data_path):
     y1_train=x_y1[train_index[1]]
     y_train= np.ones([len(train_index[0])])
     y_train[y0_train!=y1_train]=0
-    x0_test=x_x0[test_index[0],:]
-    x1_test=x_x1[test_index[1],:,:]
-    y0_test=x_y0[test_index[0]]
-    y1_test=x_y1[test_index[1]]
+    x0_test=c_x0[test_index[0],:]
+    x1_test=c_x1[test_index[1],:,:]
+    y0_test=c_y0[test_index[0]]
+    y1_test=c_y1[test_index[1]]
     y_test= np.ones([len(test_index[0])])
     y_test[y0_test!=y1_test]=0
 
@@ -124,7 +136,7 @@ def mAP(match_list):
         return av_precision
     return 0
 
-def make_index(train_val,text_label,image_label):
+def make_index(num,text_label,image_label):
     txt_dic,img_dic = {},{}
     for i in range(len(text_label)):
         if text_label[i] not in txt_dic:
@@ -137,8 +149,7 @@ def make_index(train_val,text_label,image_label):
         else:
             img_dic[image_label[i]].append(i)
 
-    n1 = int(train_val[0]/len(txt_dic))
-    n2 = int(train_val[1]/len(txt_dic))
+    n1 = int(num/len(txt_dic))
     idx1,idx2 = [],[]
     for i in range(len(txt_dic)):
         for j in range(n1):
@@ -152,20 +163,7 @@ def make_index(train_val,text_label,image_label):
     ind1.append(idx1)
     ind1.append(idx2)
 
-    ids1,ids2 = [],[]
-    for i in range(len(txt_dic)):
-        for j in range(n2):
-            ids1.append(choice(txt_dic[i]))
-            ids2.append(choice(img_dic[i]))
-            tmp1 = choice(range(len(txt_dic)))
-            tmp2 = choice(range(len(txt_dic)))
-            ids1.append(choice(txt_dic[tmp1]))
-            ids2.append(choice(txt_dic[tmp2]))
-    ind2 = []
-    ind2.append(ids1)
-    ind2.append(ids2)
-
-    return np.array(ind1),np.array(ind2)  
+    return np.array(ind1)  
 
 def get_label(filename):
     file=open(filename,'r+')
