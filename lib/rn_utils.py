@@ -77,7 +77,7 @@ def prepair_data(train_val,data_path):
         image_label = image_label[idx]
 
     x_x0,c_x0,x_y0,c_y0,x_x1,c_x1,x_y1,c_y1 = \
-    train_test_split(text,image,text_label,image_label,test_size=0.1, random_state=0)
+    train_test_split(text,text_label,image,image_label,test_size=0.1, random_state=0)
 
     save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
     
