@@ -144,7 +144,7 @@ class RNet(layers.Layer):
         hj = K.tile(K.expand_dims(h,2),[1,1,vlocs])
         g1 = x_delta/(wj+1e-5*K.ones_like(wj))
         g1 = K.expand_dims(g1,3)
-        g2 = x_delta/(hj+1e-5*K.ones_like(hj))
+        g2 = y_delta/(hj+1e-5*K.ones_like(hj))
         g2 = K.expand_dims(g2,3)
         g3 = K.expand_dims(K.abs(wi/wj),3)
         g4 = K.expand_dims(K.abs(hi/hj),3)
