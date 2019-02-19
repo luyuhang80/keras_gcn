@@ -21,10 +21,11 @@ def build(txt,img,loss_function=mAP.my_loss):
     # img
     # image_mul = layers.GlobalAveragePooling1D()(input_image)
     image_rn = RNet()([input_image])
+    image_avp = layers.GlobalAveragePooling1D()(image_rn)
     # image_att = BilinearAttentionLayer()([text_dense,input_image])
     # image_mul = layers.Multiply()([input_image,image_att])
     # image_mul = layers.GlobalAveragePooling1D()(image_mul)
-    image_dense = layers.Dense(512,activation='relu')(image_rn)
+    image_dense = layers.Dense(512,activation='relu')(image_avp)
 
     mul = layers.Multiply()([text_dense,image_dense])
     pred = layers.Dense(1,activation='sigmoid')(mul)
