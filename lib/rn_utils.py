@@ -163,15 +163,16 @@ def make_index(num,text_label,image_label):
     n1 = int(num/len(txt_dic))
     idx1,idx2 = [],[]
     a = txt_dic.keys()
-    print('txt_dic keys',a)
+    print('txt_dic keys',list(a))
+    print('txt_dic keys',a.value)
     b = img_dic.keys()
     intersection = list(set(a).intersection(set(b)))
     for i in intersection:
         for j in range(n1):
             idx1.append(choice(txt_dic[i]))
             idx2.append(choice(img_dic[i]))
-            tmp1 = choice(a)
-            tmp2 = choice(b)
+            tmp1 = choice(list(a))
+            tmp2 = choice(list(b))
             idx1.append(choice(txt_dic[tmp1]))
             idx2.append(choice(img_dic[tmp2]))
     ind1 = []
