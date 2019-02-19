@@ -17,7 +17,7 @@ def build(txt,img,loss_function=mAP.my_loss):
     input_image = layers.Input(shape=(img[1],img[2]))
     # txt
     text_gcn = gcn.MyLayer(1)(input_text)
-    text_dense = layers.Dense(512,activation='relu')(text_dense)
+    text_dense = layers.Dense(512,activation='relu')(text_gcn)
     # img
     # image_mul = layers.GlobalAveragePooling1D()(input_image)
     image_rn = RNet()([input_image])
