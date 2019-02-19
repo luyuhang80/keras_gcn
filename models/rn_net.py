@@ -35,7 +35,7 @@ def build(txt,img,loss_function=mAP.my_loss):
 
 class RNet(layers.Layer):
 
-    def __init__(self, conv_channels=256, out_dim=512, relation_glimpse=1, dropout_ratio=.2, **kwargs):
+    def __init__(self, conv_channels=256, out_dim=512, relation_glimpse=1, dropout_ratio=.5, **kwargs):
         self.out_dim = out_dim
         self.conv_channels = conv_channels
         self.relation_glimpse = relation_glimpse
@@ -118,9 +118,9 @@ class RNet(layers.Layer):
         for g in range(self.relation_glimpse):
             relational_X = relational_X + K.batch_dot(relation_map1[:,g,:,:], X_) + K.batch_dot(relation_map0[:,g,:,:], X_)
         relational_X = relational_X/(2*self.relation_glimpse) #(relational_X/self.relation_glimpse + self.nonlinear(X_))/2
-        _ , f1, f2 = relational_X.get_shape()
+        # _ , f1, f2 = relational_X.get_shape()
         # relational_X = K.reshape(relational_X,[-1,f1*f2])
-        relational_X = K.sum(relational_X,1)
+        # relational_X = K.sum(relational_X,1)
 
         return [relational_X]
 
@@ -156,7 +156,7 @@ class RNet(layers.Layer):
         # shape_a, shape_b = input_shape
         # return [(shape_b[0],shape_b[1],shape_b[2])]
         # return [(shape_b[0],shape_b[2])]
-        return [(input_shape[0],input_shape[2])]
+        return [input_shape]
 
 
 
