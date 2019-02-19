@@ -16,8 +16,8 @@ def build(txt,img,loss_function=mAP.my_loss):
     input_text = layers.Input(shape=(txt[1],))
     input_image = layers.Input(shape=(img[1],img[2]))
     # txt
-    text_dense = gcn.MyLayer(1)(input_text)
-    text_dense1 = layers.Dense(512,activation='relu')(text_dense)
+    text_gcn = gcn.MyLayer(1)(input_text)
+    text_dense = layers.Dense(512,activation='relu')(text_dense)
     # img
     # image_mul = layers.GlobalAveragePooling1D()(input_image)
     image_rn = RNet()([input_image])
@@ -43,7 +43,7 @@ class RNet(layers.Layer):
         super(RNet, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        assert isinstance(input_shape, list)
+        #assert isinstance(input_shape, list)
 
         self.v_prj = layers.Dense(self.conv_channels)
         self.q_prj = layers.Dense(self.conv_channels)
@@ -73,7 +73,7 @@ class RNet(layers.Layer):
         Nr = Nr
         '''
         # Q, X = inputs
-        X = inputs
+        X = inputs[0]
         X_ = X
         x = X[:,:,4:]
         b = X[:,:,:4]
@@ -152,7 +152,7 @@ class RNet(layers.Layer):
         g = K.concatenate([g1,g2,g3,g4],axis=3)
         return g
     def compute_output_shape(self, input_shape):
-        assert isinstance(input_shape, list)
+        #assert isinstance(input_shape, list)
         shape_a, shape_b = input_shape
         # return [(shape_b[0],shape_b[1],shape_b[2])]
         return [(shape_b[0],shape_b[2])]
