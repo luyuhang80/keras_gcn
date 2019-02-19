@@ -17,14 +17,14 @@ def build(txt,img,loss_function=mAP.my_loss):
     input_image = layers.Input(shape=(img[1],img[2]))
     # txt
     text_dense = gcn.MyLayer(1)(input_text)
-    text_dense = layers.Dense(512,activation='relu')(text_dense)
+    text_dense1 = layers.Dense(512,activation='relu')(text_dense)
     # img
     # image_mul = layers.GlobalAveragePooling1D()(input_image)
-    # image_rn = RNet()([text_dense,input_image])
-    image_att = BilinearAttentionLayer()([text_dense,input_image])
-    image_mul = layers.Multiply()([input_image,image_att])
-    image_mul = layers.GlobalAveragePooling1D()(image_mul)
-    image_dense = layers.Dense(512,activation='relu')(image_mul)
+    image_rn = RNet()([input_image])
+    # image_att = BilinearAttentionLayer()([text_dense,input_image])
+    # image_mul = layers.Multiply()([input_image,image_att])
+    # image_mul = layers.GlobalAveragePooling1D()(image_mul)
+    image_dense = layers.Dense(512,activation='relu')(image_rn)
 
     mul = layers.Multiply()([text_dense,image_dense])
     pred = layers.Dense(1,activation='sigmoid')(mul)
@@ -72,7 +72,8 @@ class RNet(layers.Layer):
         relational_x: [bs, Nr, in_dim]
         Nr = Nr
         '''
-        Q, X = inputs
+        # Q, X = inputs
+        X = inputs
         X_ = X
         x = X[:,:,4:]
         b = X[:,:,:4]
@@ -84,18 +85,18 @@ class RNet(layers.Layer):
         # print('bs',bs,'Nr',Nr, 'in_dim',in_dim)
         # project the visual features and get the relation map
         X = self.v_prj(X) #[bs, Nr, subspace_dim]
-        Q = K.expand_dims(self.q_prj(Q),1)#[bs, 1, subspace_dim]
+        # Q = K.expand_dims(self.q_prj(Q),1)#[bs, 1, subspace_dim]
         # print('X',X.get_shape())
         # print('Q',Q.get_shape())
-        X = X + Q
+        # X = X + Q
         Xi = K.tile(K.expand_dims(X,1),[1,Nr,1,1])#[bs, Nr, Nr, subspace_dim]
         Xj = K.tile(K.expand_dims(X,2),[1,1,Nr,1])#[bs, Nr, Nr, subspace_dim]
         X = Xi * Xj #[bs, Nr, Nr, subspace_dim]
         # X = K.permute_dimensions(X,[0, 3, 1, 2])#[bs, subspace_dim, Nr, Nr]
         # X0 = keras.activations.relu(self.r_conv01(X))
-        X0 = self.drop(self.relu(self.r_conv01(X)))
-        X0 = self.drop(self.relu(self.r_conv02(X0)))
-        X0 = self.drop(self.relu(self.r_conv03(X0)))
+        # X0 = self.drop(self.relu(self.r_conv01(X)))
+        # X0 = self.drop(self.relu(self.r_conv02(X0)))
+        X0 = self.drop(self.relu(self.r_conv03(X)))
 
         relation_map0 = X0 + K.permute_dimensions(X0,(0,2,1,3))  # [128,1,49,49]
         relation_map0 = K.reshape(relation_map0,(-1,self.relation_glimpse,int(Nr*Nr)))
@@ -103,9 +104,9 @@ class RNet(layers.Layer):
         relation_map0 = K.softmax(relation_map0)
         relation_map0 = K.reshape(relation_map0,[-1,self.relation_glimpse,Nr,Nr])# [128,1,49,49*49]
 
-        X1 = self.drop(self.relu(self.r_conv1(X)))#[bs, subspace_dim, Nr, Nr]
-        X1 = self.drop(self.relu(self.r_conv2(X1)))  # [bs, subspace_dim, Nr, Nr]
-        X1 = self.drop(self.relu(self.r_conv3(X1)))  # [bs, relation_glimpse, Nr, Nr]
+        # X1 = self.drop(self.relu(self.r_conv1(X)))#[bs, subspace_dim, Nr, Nr]
+        # X1 = self.drop(self.relu(self.r_conv2(X1)))  # [bs, subspace_dim, Nr, Nr]
+        X1 = self.drop(self.relu(self.r_conv3(X)))  # [bs, relation_glimpse, Nr, Nr]
         # 将矩阵上下三角对应位置相加，合并相同patch关系的推理结果
         relation_map1 = X1 + K.permute_dimensions(X1,(0,2,1,3))
         # 将Nr*Nr拉直为一维特征，进行softmax，再还原为Nr*Nr二维特征
