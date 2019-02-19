@@ -49,6 +49,8 @@ def load_bow(data_path):
         now += 1
     return np.array(data)
 
+
+
 def prepair_data(train_val,data_path):
 
     data_path1 = '/home1/yul/yzq/data/cmplaces'
@@ -57,11 +59,23 @@ def prepair_data(train_val,data_path):
     objs = f['data']['v_objs'].value
     image = np.concatenate((rois,objs),2)
     image_label = f['labels'].value
+    train = f['splits']['train'].value
+    val = f['splits']['val'].value
+    test = f['splits']['test'].value
+    x_x1,c_x1,v_x1,x_y1,c_y1,v_y1 = image[train],image[test],image[val],image_label[train],image_label[test],image_label[val]
     f.close() 
     
-    t = h5py.File(data_path1+'/text_bow_unified.h5','r')
-    text = t['data']['features'].value
-    text_label = t['labels'].value
+    f = h5py.File(data_path1 + '/text_bow_unified.h5','r')
+    text = f['data']['features'].value
+    text_label = f['labels'].value
+    train = f['splits']['train'].value
+    val = f['splits']['val'].value
+    test = f['splits']['test'].value
+    x_x0,c_x0,v_x0,x_y0,c_y0,v_y0 = text[train],text[test],text[val],text_label[train],text_label[test],text_label[val]
+    f.close()
+    print('origins train, test, val text shape:',x_x0.shape,c_x0.shape,v_x0.shape)
+    print('origins train, test, val image shape:',x_x1.shape,c_x1.shape,v_x1.shape)
+
     idx = []
     if len(text_label)>len(image_label):
         ind = range(len(image_label))
@@ -76,13 +90,10 @@ def prepair_data(train_val,data_path):
         image = image[idx,:,:]
         image_label = image_label[idx]
 
-    x_x0,c_x0,x_y0,c_y0,x_x1,c_x1,x_y1,c_y1 = \
-    train_test_split(text,text_label,image,image_label,test_size=0.1, random_state=0)
-
     save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
     
     train_index = make_index(train_val[0],x_y0,x_y1)
-    test_index = make_index(train_val[1],c_y0,c_y1)
+    test_index = make_index(train_val[1],x_y0,x_y1)
 
     train_index=index_shuffle(train_index)
     test_index=index_shuffle(test_index)
@@ -93,10 +104,10 @@ def prepair_data(train_val,data_path):
     y1_train=x_y1[train_index[1]]
     y_train= np.ones([len(train_index[0])])
     y_train[y0_train!=y1_train]=0
-    x0_test=c_x0[test_index[0],:]
-    x1_test=c_x1[test_index[1],:,:]
-    y0_test=c_y0[test_index[0]]
-    y1_test=c_y1[test_index[1]]
+    x0_test=x_x0[test_index[0],:]
+    x1_test=x_x1[test_index[1],:,:]
+    y0_test=x_y0[test_index[0]]
+    y1_test=x_y1[test_index[1]]
     y_test= np.ones([len(test_index[0])])
     y_test[y0_test!=y1_test]=0
 
