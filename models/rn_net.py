@@ -153,9 +153,10 @@ class RNet(layers.Layer):
         return g
     def compute_output_shape(self, input_shape):
         #assert isinstance(input_shape, list)
-        shape_a, shape_b = input_shape
+        # shape_a, shape_b = input_shape
         # return [(shape_b[0],shape_b[1],shape_b[2])]
-        return [(shape_b[0],shape_b[2])]
+        # return [(shape_b[0],shape_b[2])]
+        return [(input_shape[0],input_shape[2])]
 
 
 
