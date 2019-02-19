@@ -62,20 +62,14 @@ def prepair_data(train_val,data_path):
     train = f['splits']['train'].value
     val = f['splits']['val'].value
     test = f['splits']['test'].value
-    x_x1,c_x1,v_x1,x_y1,c_y1,v_y1 = image[train],image[test],image[val],image_label[train],image_label[test],image_label[val]
     f.close() 
-    
     f = h5py.File(data_path1 + '/text_bow_unified.h5','r')
     text = f['data']['features'].value
     text_label = f['labels'].value
     train = f['splits']['train'].value
     val = f['splits']['val'].value
     test = f['splits']['test'].value
-    x_x0,c_x0,v_x0,x_y0,c_y0,v_y0 = text[train],text[test],text[val],text_label[train],text_label[test],text_label[val]
     f.close()
-    print('origins train, test, val text shape:',x_x0.shape,c_x0.shape,v_x0.shape)
-    print('origins train, test, val image shape:',x_x1.shape,c_x1.shape,v_x1.shape)
-
     idx = []
     if len(text_label)>len(image_label):
         ind = range(len(image_label))
@@ -89,8 +83,14 @@ def prepair_data(train_val,data_path):
             idx.append(choice(ind,replace=False))
         image = image[idx,:,:]
         image_label = image_label[idx]
-
+        
+    x_x1,c_x1,v_x1,x_y1,c_y1,v_y1 = image[train],image[test],image[val],image_label[train],image_label[test],image_label[val]
+    x_x0,c_x0,v_x0,x_y0,c_y0,v_y0 = text[train],text[test],text[val],text_label[train],text_label[test],text_label[val]
     save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
+
+    print('origins train, test, val text shape:',x_x0.shape,c_x0.shape,v_x0.shape)
+    print('origins train, test, val image shape:',x_x1.shape,c_x1.shape,v_x1.shape)
+
     
     train_index = make_index(train_val[0],x_y0,x_y1)
     test_index = make_index(train_val[1],v_y0,v_y1)
@@ -163,8 +163,6 @@ def make_index(num,text_label,image_label):
     n1 = int(num/len(txt_dic))
     idx1,idx2 = [],[]
     a = txt_dic.keys()
-    print('txt_dic keys',list(a))
-    print('txt_dic keys',a.value)
     b = img_dic.keys()
     intersection = list(set(a).intersection(set(b)))
     for i in intersection:
