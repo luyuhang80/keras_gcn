@@ -65,7 +65,7 @@ class RNet(layers.Layer):
                                       # trainable=True)
         super(RNet, self).build(input_shape)  # Be sure to call this at the end
     def call(self, inputs):
-        assert isinstance(inputs, list)
+        # assert isinstance(inputs, list)
         '''
         :param X: [batch_size, Nr, in_dim]
         :return: relation map:[batch_size, relation_glimpse, Nr, Nr]
