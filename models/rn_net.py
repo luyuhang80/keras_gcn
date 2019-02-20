@@ -53,9 +53,9 @@ class RNet(layers.Layer):
         self.r_conv01 = layers.Conv2D(filters=out_channel1, kernel_size=1)
         self.r_conv02 = layers.Conv2D(filters=out_channel2, kernel_size=1)
         self.r_conv03 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=1)
-        self.r_conv1 = layers.Conv2D(filters=out_channel1, kernel_size=3, dilation_rate=(1,1),padding='valid')
-        self.r_conv2 = layers.Conv2D(filters=out_channel2, kernel_size=3, dilation_rate=(1,2),padding='valid')
-        self.r_conv3 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=3, dilation_rate=(1,4),padding='valid')
+        self.r_conv1 = layers.Conv2D(filters=out_channel1, kernel_size=3, dilation_rate=(1,1),padding='same')
+        self.r_conv2 = layers.Conv2D(filters=out_channel2, kernel_size=3, dilation_rate=(1,2),padding='same')
+        self.r_conv3 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=3, dilation_rate=(1,4),padding='same')
         self.relu = layers.ReLU()
         self.drop = layers.Dropout(self.dropout_ratio)
 
@@ -116,7 +116,7 @@ class RNet(layers.Layer):
         X1 = self.drop(self.relu(self.r_conv3(X)))  # [bs, relation_glimpse, Nr, Nr]
         # 将矩阵上下三角对应位置相加，合并相同patch关系的推理结果
         print('X1 after conv3',X1.get_shape())
-        
+
         relation_map1 = X1 + K.permute_dimensions(X1,(0,2,1,3))
         # 将Nr*Nr拉直为一维特征，进行softmax，再还原为Nr*Nr二维特征
         # view（）函数： 变换数据的维度，但数据量和值不变，根据-1的位置，推测-1所在维度的值
