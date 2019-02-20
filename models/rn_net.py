@@ -53,9 +53,9 @@ class RNet(layers.Layer):
         self.r_conv01 = layers.Conv2D(filters=out_channel1, kernel_size=1)
         self.r_conv02 = layers.Conv2D(filters=out_channel2, kernel_size=1)
         self.r_conv03 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=1)
-        self.r_conv1 = layers.Conv2D(filters=out_channel1, kernel_size=1, dilation_rate=(1,1),padding='valid')
-        self.r_conv2 = layers.Conv2D(filters=out_channel2, kernel_size=1, dilation_rate=(1,2),padding='valid')
-        self.r_conv3 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=1, dilation_rate=(1,4),padding='valid')
+        self.r_conv1 = layers.Conv2D(filters=out_channel1, kernel_size=3, dilation_rate=(1,1),padding='valid')
+        self.r_conv2 = layers.Conv2D(filters=out_channel2, kernel_size=3, dilation_rate=(1,2),padding='valid')
+        self.r_conv3 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=3, dilation_rate=(1,4),padding='valid')
         self.relu = layers.ReLU()
         self.drop = layers.Dropout(self.dropout_ratio)
 
@@ -75,29 +75,33 @@ class RNet(layers.Layer):
         '''
         # Q, X = inputs
         X = inputs[0]
-        X_ = X
-        x = X[:,:,4:]
-        b = X[:,:,:4]
-        pos = b
+        # X_ = X
+        # x = X[:,:,4:]
+        # b = X[:,:,:4]
+        # pos = b
         # pos = self.pos_encoding(b)
-        X = K.concatenate([X,pos],2)
+        # X = K.concatenate([X,pos],2)
         # # img part 
         bs, Nr, in_dim = X.get_shape() 
         # print('bs',bs,'Nr',Nr, 'in_dim',in_dim)
         # project the visual features and get the relation map
         X = self.v_prj(X) #[bs, Nr, subspace_dim]
         # Q = K.expand_dims(self.q_prj(Q),1)#[bs, 1, subspace_dim]
-        # print('X',X.get_shape())
+        print('after fc',X.get_shape())
         # print('Q',Q.get_shape())
         # X = X + Q
         Xi = K.tile(K.expand_dims(X,1),[1,Nr,1,1])#[bs, Nr, Nr, subspace_dim]
         Xj = K.tile(K.expand_dims(X,2),[1,1,Nr,1])#[bs, Nr, Nr, subspace_dim]
         X = Xi * Xj #[bs, Nr, Nr, subspace_dim]
+        print('after *',X.get_shape())
+
         # X = K.permute_dimensions(X,[0, 3, 1, 2])#[bs, subspace_dim, Nr, Nr]
         # X0 = keras.activations.relu(self.r_conv01(X))
+
         # X0 = self.drop(self.relu(self.r_conv01(X)))
         # X0 = self.drop(self.relu(self.r_conv02(X0)))
         X0 = self.drop(self.relu(self.r_conv03(X)))
+        print('X0 after conv03',X0.get_shape())
 
         relation_map0 = X0 + K.permute_dimensions(X0,(0,2,1,3))  # [128,1,49,49]
         relation_map0 = K.reshape(relation_map0,(-1,self.relation_glimpse,int(Nr*Nr)))
@@ -105,10 +109,14 @@ class RNet(layers.Layer):
         relation_map0 = K.softmax(relation_map0)
         relation_map0 = K.reshape(relation_map0,[-1,self.relation_glimpse,Nr,Nr])# [128,1,49,49*49]
 
+        print('relation_map0 ',relation_map0.get_shape())
+
         # X1 = self.drop(self.relu(self.r_conv1(X)))#[bs, subspace_dim, Nr, Nr]
         # X1 = self.drop(self.relu(self.r_conv2(X1)))  # [bs, subspace_dim, Nr, Nr]
         X1 = self.drop(self.relu(self.r_conv3(X)))  # [bs, relation_glimpse, Nr, Nr]
         # 将矩阵上下三角对应位置相加，合并相同patch关系的推理结果
+        print('X1 after conv3',X1.get_shape())
+        
         relation_map1 = X1 + K.permute_dimensions(X1,(0,2,1,3))
         # 将Nr*Nr拉直为一维特征，进行softmax，再还原为Nr*Nr二维特征
         # view（）函数： 变换数据的维度，但数据量和值不变，根据-1的位置，推测-1所在维度的值
