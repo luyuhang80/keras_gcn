@@ -66,6 +66,7 @@ class RNet(layers.Layer):
                                       # initializer='uniform',
                                       # trainable=True)
         super(RNet, self).build(input_shape)  # Be sure to call this at the end
+
     def call(self, inputs):
         # assert isinstance(inputs, list)
         '''
@@ -75,65 +76,56 @@ class RNet(layers.Layer):
         Nr = Nr
         '''
         # Q, X = inputs
-        X = inputs[0]
-        # X_ = X
-        # x = X[:,:,4:]
-        # b = X[:,:,:4]
-        # pos = b
-        # pos = self.pos_encoding(b)
-        # X = K.concatenate([X,pos],2)
+        ph_x = inputs[0]
+        subsapce_dim = self.conv_channels
+        relation_glimpse = self.relation_glimpse
         # # img part 
-        bs, Nr, in_dim = X.get_shape() 
+        bs, N, in_dim = ph_x.get_shape() 
         # print('bs',bs,'Nr',Nr, 'in_dim',in_dim)
         # project the visual features and get the relation map
-        X = self.v_prj(X) #[bs, Nr, subspace_dim]
-        # Q = K.expand_dims(self.q_prj(Q),1)#[bs, 1, subspace_dim]
-        print('after fc',X.get_shape())
-        # print('Q',Q.get_shape())
-        # X = X + Q
-        Xi = K.tile(K.expand_dims(X,1),[1,Nr,1,1])#[bs, Nr, Nr, subspace_dim]
-        Xj = K.tile(K.expand_dims(X,2),[1,1,Nr,1])#[bs, Nr, Nr, subspace_dim]
-        X = Xi * Xj #[bs, Nr, Nr, subspace_dim]
-        print('after *',X.get_shape())
+        ph_reshape = tf.reshape(ph_x, [-1, in_dim])
+        ph_subdim, _ = self.fc(ph_reshape, subsapce_dim, activation_fn=None)
+        ph_subdim = tf.reshape(ph_subdim, [int(B), int(N), int(subsapce_dim)])
+        ph_exp1 = tf.expand_dims(ph_subdim, 1)
+        ph_exp1 = tf.tile(ph_exp1, [1, N, 1, 1])
+        ph_exp2 = tf.expand_dims(ph_subdim, 2)
+        ph_exp2 = tf.tile(ph_exp2, [1, 1, N, 1])
+        ph_input = ph_exp1 * ph_exp2  # [bs,N,N, ph_subdim]
 
-        # X = K.permute_dimensions(X,[0, 3, 1, 2])#[bs, subspace_dim, Nr, Nr]
-        # X0 = keras.activations.relu(self.r_conv01(X))
+        X0 = tf.nn.dropout(tf.nn.relu(tf.layers.conv2d(inputs=ph_input,filters=int(subsapce_dim/2),kernel_size=1)),self.dropout_ratio)
+        X0 = tf.nn.dropout(tf.nn.relu(tf.layers.conv2d(inputs=X0,filters=int(subsapce_dim/4),kernel_size=1)),self.dropout_ratio)
+        X0 = tf.nn.dropout(tf.nn.relu(tf.layers.conv2d(inputs=X0,filters=relation_glimpse,kernel_size=1)), self.dropout_ratio)
+        # (256,36,36,1)
+        rel_map0 = X0 + tf.transpose(X0,[0,2,1,3])
+        # print('rel_map0_bt',rel_map0.get_shape())   # (256,36,36,1)
+        rel_map0 = tf.transpose(rel_map0,[0,3,2,1])
+        # print('rel_map0_at',rel_map0.get_shape())   #(256,1,36,36)
 
-        # X0 = self.drop(self.relu(self.r_conv01(X)))
-        # X0 = self.drop(self.relu(self.r_conv02(X0)))
-        X0 = self.drop(self.relu(self.r_conv03(X)))  
-        print('X0 after conv03',X0.get_shape())   # (256,36,36,1)
+        rel_map0 = tf.reshape(rel_map0,[self.batch_size,relation_glimpse,-1])
+        # print('rel_map0_shape1',rel_map0.get_shape())  #(256,1,1296)
+        rel_map0 = tf.nn.softmax(rel_map0,axis=2)
+        rel_map0 = tf.reshape(rel_map0,[self.batch_size,relation_glimpse,N,-1])
+        print('rel_map0',rel_map0.get_shape())  #(256,1,36,36)
 
-        relation_map0 = X0 + K.permute_dimensions(X0,(0,2,1,3))  # [256,36,36,1]
-        relation_map0 = K.permute_dimensions(relation_map0,(0,3,2,1))
-        relation_map0 = K.reshape(relation_map0,(-1,self.relation_glimpse,int(Nr*Nr)))
-        relation_map0 = K.softmax(relation_map0,axis=2)
-        relation_map0 = K.reshape(relation_map0,[-1,self.relation_glimpse,Nr,Nr])# [128,1,49,49*49]
+        X1 = tf.nn.dropout(tf.nn.relu(tf.layers.conv2d(inputs=ph_input,filters=int(subsapce_dim/2),kernel_size=3,dilation_rate=(1,1),padding='same')),dropout_ratio)
+        X1 = tf.nn.dropout(tf.nn.relu(tf.layers.conv2d(inputs=X1,filters=int(subsapce_dim/4),kernel_size=3,dilation_rate=(1,2),padding='same')),dropout_ratio)
+        X1 = tf.nn.dropout(tf.nn.relu(tf.layers.conv2d(inputs=X1,filters=relation_glimpse,kernel_size=3,dilation_rate=(1,4),padding='same')),dropout_ratio)
+        rel_map1 = X1 + tf.transpose(X1,[0,2,1,3])
+        rel_map1 = tf.transpose(rel_map1,[0,3,2,1])
+        rel_map1 = tf.reshape(rel_map1,[self.batch_size,relation_glimpse,-1])
+        rel_map1 = tf.nn.softmax(rel_map1,2)
+        rel_map1 = tf.reshape(rel_map1,[self.batch_size,relation_glimpse,N,-1])
+        print('rel_map1',rel_map1.get_shape())  # (256,1,36,36)
+        print('ph_x',ph_x.get_shape())   # (256,36,2048)
 
-        print('relation_map0 ',relation_map0.get_shape())
+        rel_x = tf.zeros_like(ph_x)
+        for g in range(relation_glimpse):
+            rel_x = rel_x + tf.matmul(rel_map1[:,g,:,:], ph_x) + tf.matmul(rel_map0[:,g,:,:], ph_x)
+        rel_x = rel_x/(2 * relation_glimpse)
 
-        # X1 = self.drop(self.relu(self.r_conv1(X)))#[bs, subspace_dim, Nr, Nr]
-        # X1 = self.drop(self.relu(self.r_conv2(X1)))  # [bs, subspace_dim, Nr, Nr]
-        X1 = self.drop(self.relu(self.r_conv3(X)))  # [bs, relation_glimpse, Nr, Nr]
-        # 将矩阵上下三角对应位置相加，合并相同patch关系的推理结果
-        print('X1 after conv3',X1.get_shape())
+        rn_out = tf.reshape(rel_x,[self.batch_size,-1])
 
-        relation_map1 = X1 + K.permute_dimensions(X1,(0,2,1,3))
-        relation_map1 = K.permute_dimensions(relation_map1,(0,3,2,1))
-        # 将Nr*Nr拉直为一维特征，进行softmax，再还原为Nr*Nr二维特征
-        # view（）函数： 变换数据的维度，但数据量和值不变，根据-1的位置，推测-1所在维度的值
-        relation_map1 = K.reshape(relation_map1,[-1,self.relation_glimpse,Nr*Nr])
-        relation_map1 = K.softmax(relation_map1,axis=2)
-        relation_map1 = K.reshape(relation_map1,[-1,self.relation_glimpse,Nr,Nr])# [128,1,49,49*49]
-        relational_X = K.zeros_like(X_)
-        for g in range(self.relation_glimpse):
-            relational_X = relational_X + K.batch_dot(relation_map1[:,g,:,:], X_) + K.batch_dot(relation_map0[:,g,:,:], X_)
-        relational_X = relational_X/(2*self.relation_glimpse) #(relational_X/self.relation_glimpse + self.nonlinear(X_))/2
-        _ , f1, f2 = relational_X.get_shape()
-        relational_X = K.reshape(relational_X,[-1,f1*f2])
-        # relational_X = K.sum(relational_X,1)
-
-        return [relational_X]
+        return [rn_out]
 
     def pos_encoding(self,b):
         bs, vlocs, bdim = b.get_shape()
