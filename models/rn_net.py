@@ -84,8 +84,8 @@ class RNet(layers.Layer):
         # print('bs',bs,'Nr',Nr, 'in_dim',in_dim)
         # project the visual features and get the relation map
         ph_reshape = tf.reshape(ph_x, [-1, in_dim])
-        ph_subdim, _ = self.fc(ph_reshape, subsapce_dim, activation_fn=None)
-        ph_subdim = tf.reshape(ph_subdim, [int(B), int(N), int(subsapce_dim)])
+        ph_subdim = tf.layers.dense(inputs=ph_reshape, units=subsapce_dim, activation=None)
+        ph_subdim = tf.reshape(ph_subdim, [-1, int(N), int(subsapce_dim)])
         ph_exp1 = tf.expand_dims(ph_subdim, 1)
         ph_exp1 = tf.tile(ph_exp1, [1, N, 1, 1])
         ph_exp2 = tf.expand_dims(ph_subdim, 2)
@@ -101,10 +101,10 @@ class RNet(layers.Layer):
         rel_map0 = tf.transpose(rel_map0,[0,3,2,1])
         # print('rel_map0_at',rel_map0.get_shape())   #(256,1,36,36)
 
-        rel_map0 = tf.reshape(rel_map0,[self.batch_size,relation_glimpse,-1])
+        rel_map0 = tf.reshape(rel_map0,[-1,relation_glimpse,N*N])
         # print('rel_map0_shape1',rel_map0.get_shape())  #(256,1,1296)
         rel_map0 = tf.nn.softmax(rel_map0,axis=2)
-        rel_map0 = tf.reshape(rel_map0,[self.batch_size,relation_glimpse,N,-1])
+        rel_map0 = tf.reshape(rel_map0,[-1,relation_glimpse,N,N])
         print('rel_map0',rel_map0.get_shape())  #(256,1,36,36)
 
         X1 = tf.nn.dropout(tf.nn.relu(tf.layers.conv2d(inputs=ph_input,filters=int(subsapce_dim/2),kernel_size=3,dilation_rate=(1,1),padding='same')),dropout_ratio)
@@ -112,9 +112,9 @@ class RNet(layers.Layer):
         X1 = tf.nn.dropout(tf.nn.relu(tf.layers.conv2d(inputs=X1,filters=relation_glimpse,kernel_size=3,dilation_rate=(1,4),padding='same')),dropout_ratio)
         rel_map1 = X1 + tf.transpose(X1,[0,2,1,3])
         rel_map1 = tf.transpose(rel_map1,[0,3,2,1])
-        rel_map1 = tf.reshape(rel_map1,[self.batch_size,relation_glimpse,-1])
+        rel_map1 = tf.reshape(rel_map1,[-1,relation_glimpse,N*N])
         rel_map1 = tf.nn.softmax(rel_map1,2)
-        rel_map1 = tf.reshape(rel_map1,[self.batch_size,relation_glimpse,N,-1])
+        rel_map1 = tf.reshape(rel_map1,[-1,relation_glimpse,N,N])
         print('rel_map1',rel_map1.get_shape())  # (256,1,36,36)
         print('ph_x',ph_x.get_shape())   # (256,36,2048)
 
@@ -122,8 +122,9 @@ class RNet(layers.Layer):
         for g in range(relation_glimpse):
             rel_x = rel_x + tf.matmul(rel_map1[:,g,:,:], ph_x) + tf.matmul(rel_map0[:,g,:,:], ph_x)
         rel_x = rel_x/(2 * relation_glimpse)
-
-        rn_out = tf.reshape(rel_x,[self.batch_size,-1])
+        
+        a, b, c = rel_x.get_shape()
+        rn_out = tf.reshape(rel_x,[-1,b*c])
 
         return [rn_out]
 
