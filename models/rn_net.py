@@ -16,8 +16,9 @@ def build(txt,img,loss_function=mAP.my_loss):
     input_text = layers.Input(shape=(txt[1],))
     input_image = layers.Input(shape=(img[1],img[2]))
     # txt
-    text_gcn = gcn.MyLayer(1)(input_text)
-    text_dense = layers.Dense(512,activation='relu')(text_gcn)
+    # text_gcn = gcn.MyLayer(1)(input_text)
+    text_dense = layers.Dense(2048,activation='relu')(input_text)
+    text_dense = layers.Dense(1024,activation='relu')(text_dense)
     # img
     # image_mul = layers.GlobalAveragePooling1D()(input_image)
     image_rn = RNet()([input_image])
@@ -25,7 +26,7 @@ def build(txt,img,loss_function=mAP.my_loss):
     # image_att = BilinearAttentionLayer()([text_dense,input_image])
     # image_mul = layers.Multiply()([input_image,image_att])
     # image_mul = layers.GlobalAveragePooling1D()(image_mul)
-    image_dense = layers.Dense(512,activation='relu')(image_avp)
+    image_dense = layers.Dense(1024,activation='relu')(image_avp)
 
     mul = layers.Multiply()([text_dense,image_dense])
     pred = layers.Dense(1,activation='sigmoid')(mul)
@@ -53,9 +54,9 @@ class RNet(layers.Layer):
         self.r_conv01 = layers.Conv2D(filters=out_channel1, kernel_size=1)
         self.r_conv02 = layers.Conv2D(filters=out_channel2, kernel_size=1)
         self.r_conv03 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=1)
-        self.r_conv1 = layers.Conv2D(filters=out_channel1, kernel_size=3, dilation_rate=(1,1),padding='same')
-        self.r_conv2 = layers.Conv2D(filters=out_channel2, kernel_size=3, dilation_rate=(1,2),padding='same')
-        self.r_conv3 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=3, dilation_rate=(1,4),padding='same')
+        self.r_conv1 = layers.Conv2D(filters=out_channel1, kernel_size=3, dilation_rate=1,padding='same')
+        self.r_conv2 = layers.Conv2D(filters=out_channel2, kernel_size=3, dilation_rate=2,padding='same')
+        self.r_conv3 = layers.Conv2D(filters=self.relation_glimpse, kernel_size=3, dilation_rate=4,padding='same')
         self.relu = layers.ReLU()
         self.drop = layers.Dropout(self.dropout_ratio)
 
@@ -100,13 +101,13 @@ class RNet(layers.Layer):
 
         # X0 = self.drop(self.relu(self.r_conv01(X)))
         # X0 = self.drop(self.relu(self.r_conv02(X0)))
-        X0 = self.drop(self.relu(self.r_conv03(X)))
-        print('X0 after conv03',X0.get_shape())
+        X0 = self.drop(self.relu(self.r_conv03(X)))  
+        print('X0 after conv03',X0.get_shape())   # (256,36,36,1)
 
-        relation_map0 = X0 + K.permute_dimensions(X0,(0,2,1,3))  # [128,1,49,49]
+        relation_map0 = X0 + K.permute_dimensions(X0,(0,2,1,3))  # [256,36,36,1]
+        relation_map0 = K.permute_dimensions(relation_map0,(0,3,2,1))
         relation_map0 = K.reshape(relation_map0,(-1,self.relation_glimpse,int(Nr*Nr)))
-
-        relation_map0 = K.softmax(relation_map0)
+        relation_map0 = K.softmax(relation_map0,axis=2)
         relation_map0 = K.reshape(relation_map0,[-1,self.relation_glimpse,Nr,Nr])# [128,1,49,49*49]
 
         print('relation_map0 ',relation_map0.get_shape())
@@ -118,17 +119,18 @@ class RNet(layers.Layer):
         print('X1 after conv3',X1.get_shape())
 
         relation_map1 = X1 + K.permute_dimensions(X1,(0,2,1,3))
+        relation_map1 = K.permute_dimensions(relation_map1,(0,3,2,1))
         # 将Nr*Nr拉直为一维特征，进行softmax，再还原为Nr*Nr二维特征
         # view（）函数： 变换数据的维度，但数据量和值不变，根据-1的位置，推测-1所在维度的值
         relation_map1 = K.reshape(relation_map1,[-1,self.relation_glimpse,Nr*Nr])
-        relation_map1 = K.softmax(relation_map1)
+        relation_map1 = K.softmax(relation_map1,axis=2)
         relation_map1 = K.reshape(relation_map1,[-1,self.relation_glimpse,Nr,Nr])# [128,1,49,49*49]
         relational_X = K.zeros_like(X_)
         for g in range(self.relation_glimpse):
             relational_X = relational_X + K.batch_dot(relation_map1[:,g,:,:], X_) + K.batch_dot(relation_map0[:,g,:,:], X_)
         relational_X = relational_X/(2*self.relation_glimpse) #(relational_X/self.relation_glimpse + self.nonlinear(X_))/2
-        # _ , f1, f2 = relational_X.get_shape()
-        # relational_X = K.reshape(relational_X,[-1,f1*f2])
+        _ , f1, f2 = relational_X.get_shape()
+        relational_X = K.reshape(relational_X,[-1,f1*f2])
         # relational_X = K.sum(relational_X,1)
 
         return [relational_X]
