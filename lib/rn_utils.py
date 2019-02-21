@@ -70,20 +70,21 @@ def prepair_data(train_val,data_path):
     val = f['splits']['val'].value
     test = f['splits']['test'].value
     f.close()
-    idx = []
-    if len(text_label)>len(image_label):
-        ind = range(len(image_label))
-        for i in range(len(image_label)):
-            idx.append(choice(ind,replace=False))
-        text = text[idx,:]
-        text_label = text_label[idx]
-    else:
-        ind = range(len(text_label))
-        for i in range(len(text_label)):
-            idx.append(choice(ind,replace=False))
-        image = image[idx,:,:]
-        image_label = image_label[idx]
-        
+    
+    # idx = []
+    # if len(text_label)>len(image_label):
+    #     ind = range(len(image_label))
+    #     for i in range(len(image_label)):
+    #         idx.append(choice(ind,replace=False))
+    #     text = text[idx,:]
+    #     text_label = text_label[idx]
+    # else:
+    #     ind = range(len(text_label))
+    #     for i in range(len(text_label)):
+    #         idx.append(choice(ind,replace=False))
+    #     image = image[idx,:,:]
+    #     image_label = image_label[idx]
+
     x_x1,c_x1,v_x1,x_y1,c_y1,v_y1 = image[train],image[test],image[val],image_label[train],image_label[test],image_label[val]
     x_x0,c_x0,v_x0,x_y0,c_y0,v_y0 = text[train],text[test],text[val],text_label[train],text_label[test],text_label[val]
     save_test_data(x_x0,x_x1,x_y0,x_y1,c_x0,c_x1,c_y0,c_y1,data_path)
@@ -149,16 +150,22 @@ def mAP(match_list):
 
 def make_index(num,text_label,image_label):
     txt_dic,img_dic = {},{}
-    for i in range(len(text_label)):
-        if text_label[i] not in txt_dic:
-            txt_dic[text_label[i]] = [i]
-        else:
-            txt_dic[text_label[i]].append(i)
 
-        if image_label[i] not in img_dic:
-            img_dic[image_label[i]] = [i]
+    for i,t in enumerate(text_label):
+        if t not in txt_dic:
+            txt_dic[t] = [i]
         else:
-            img_dic[image_label[i]].append(i)
+            txt_dic[t].append(i)
+    for j,m in enumerate(img_label):
+        if m not in img_dic:
+            img_dic[m] = [i]
+        else:
+            img_dic[m].append(i)
+            
+    for i in txt_dic:
+        print(i,'-',len(txt_dic[i]))
+    for g in img_dic:
+        print(g,'-',len(img_dic[g]))
 
     n1 = int(num/len(txt_dic))
     idx1,idx2 = [],[]
