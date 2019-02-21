@@ -156,16 +156,16 @@ def make_index(num,text_label,image_label):
             txt_dic[t] = [i]
         else:
             txt_dic[t].append(i)
-    for j,m in enumerate(img_label):
+    for j,m in enumerate(image_label):
         if m not in img_dic:
             img_dic[m] = [i]
         else:
             img_dic[m].append(i)
-            
+
     for i in txt_dic:
-        print(i,'-',len(txt_dic[i]))
+        print(i,'-txt-',len(txt_dic[i]))
     for g in img_dic:
-        print(g,'-',len(img_dic[g]))
+        print(g,'-img-',len(img_dic[g]))
 
     n1 = int(num/len(txt_dic))
     idx1,idx2 = [],[]
